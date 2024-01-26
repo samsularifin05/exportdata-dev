@@ -1,0 +1,40 @@
+{
+  "name": "exportdata",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "repository": "https://github.com/samsularifin05/exportpdfexcel",
+  "description": "Export Data Excel Pdf and Txt",
+  "keywords": [
+    "export",
+    "excel",
+    "pdf",
+    "txt",
+    "jspdf",
+    "exceljs"
+  ],
+  "files": [
+    "dist/"
+  ],
+  "tsup": {
+    "entry": [
+      "src/index.ts"
+    ],
+    "splitting": false,
+    "sourcemap": true,
+    "clean": true
+  },
+  "scripts": {
+    "build": "tsup"
+  },
+  "author": "samsularifin05",
+  "license": "ISC",
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "jspdf": "^2.5.1",
+    "jspdf-autotable": "^3.8.1"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  }
+}
