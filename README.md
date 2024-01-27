@@ -6,9 +6,17 @@ Untuk menggunakan modul ExportDataFile, Anda perlu menginstalnya di proyek Anda.
 
 Example <a href="https://codesandbox.io/p/sandbox/export-excel-pdf-5v6th4"> Demo </a>
 
-```typescript
+## Install
+
+```
 npm install exportdatafile
 ```
+
+## Fitur
+
+- Download File .xlsx .txt .pdf format
+- Tidak ada kode sisi server
+- Mudah digunakan
 
 ```typescript
 import { ColumnGenarator, ExportDataFile } from "exportdatafile";
@@ -130,6 +138,9 @@ const DemoPage = () => {
 export default DemoPage;
 ```
 
-| Attempt | #1  | #2  |
-| ------- | --- | --- |
-| Seconds | 301 | 283 |
+Option
+Daftar properti yang tersedia dapat ditemukan di bawah. Ini harus diteruskan ke komponen ExportDataFile.
+
+| Property | Type   | Description                                                                                                                                |
+| -------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| type     | String | Type export data yang menentukan file apa yang akan di export Contohnya : "TXT","PDF","EXCEL","ALL", (ALL untuk semua data file di export) |
