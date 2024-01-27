@@ -1,12 +1,10 @@
 interface Load {
   [key: string]: string | string[] | undefined;
 }
-
 interface Res {
   data: Load[];
   template: string;
 }
-
 const generateNotaSlip = (res: Res): string[] => {
   const notaGenerated: string[] = [];
 

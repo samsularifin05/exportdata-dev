@@ -2,7 +2,6 @@ import ExportExcel from "./exportExcel";
 import ExportPDF from "./exportPdf";
 import ExportToTxt from "./exportTextFile";
 import { GenaratorExport, ColumnGenarator } from "./interface";
-
 /**
  * Ekspor ke PDF atau Excel berdasarkan konfigurasi yang diberikan.
  * @param title - Judul export data.
@@ -15,8 +14,7 @@ import { GenaratorExport, ColumnGenarator } from "./interface";
  * @param date - Rentang tanggal untuk export data.
  * @param type - Jenis export data yang akan diekspor ("PDF" "TXT" atau "EXCEL").
  */
-
-export const ExportData = <T>({
+export const ExportDataFile = <T>({
   columns,
   data,
   grouping,
