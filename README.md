@@ -1,5 +1,5 @@
 Modul ExportDataFile
-Modul ini memfasilitasi ekspor data ke format Excel dan PDF. Ini mencakup fungsi, ExportDataFile, yang dapat dikonfigurasi untuk menghasilkan laporan berdasarkan data dan konfigurasi kolom yang diberikan. Berikut adalah panduan rinci tentang cara menggunakan modul ini.
+Modul ini memfasilitasi ekspor data ke format Excel PDF dan TXT. Ini mencakup fungsi, ExportDataFile, yang dapat dikonfigurasi untuk menghasilkan laporan berdasarkan data dan konfigurasi kolom yang diberikan. Berikut adalah panduan rinci tentang cara menggunakan modul ini.
 
 Instalasi
 Untuk menggunakan modul ExportDataFile, Anda perlu menginstalnya di proyek Anda. Anda dapat melakukannya menggunakan npm:
@@ -94,7 +94,7 @@ const DemoPage = () => {
             columns: columns,
             grouping: [],
             excelSetting: {
-              titleExcel: "LAPORAN BAYAR BUNGA EXCEL",
+              titleExcel: "Example Export Data Excel",
               bgColor: "000000",
               txtColor: "ffffff",
               grandTotalSetting: {
@@ -103,11 +103,11 @@ const DemoPage = () => {
             },
             txtSetting: {
               dataTxt: data,
-              titleTxt: "Slip Txt FIle",
+              titleTxt: "Example Export Data Txt",
               templateTxt: `--------------- SLIP ---------------\nFaktur         = {no_faktur_hutang}\nDiskon         = {diskon}\nTanggal System = {tgl_system}\nHarga          = {harga}\nBerat          = {berat}\nTotal          = {total}\nInput_by       = {input_by}`
             },
             pdfSetting: {
-              titlePdf: "LAPORAN BAYAR BUNGA PDF",
+              titlePdf: "Example Export Data Pdf",
               orientation: "l",
               unit: "mm",
               bgColor: "000000",
@@ -129,3 +129,7 @@ const DemoPage = () => {
 
 export default DemoPage;
 ```
+
+| Attempt | #1  | #2  |
+| ------- | --- | --- |
+| Seconds | 301 | 283 |
