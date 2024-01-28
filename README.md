@@ -141,11 +141,11 @@ export default DemoPage;
 Option
 Daftar properti yang tersedia dapat ditemukan di bawah. Ini harus diteruskan ke komponen ExportDataFile.
 
-| Properti | Tipe   | Deskripsi                                                                                                                                                                                                         |
-| -------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| type     | String | Tipe data ekspor, menentukan format file yang akan diekspor. Nilai contoh: "TXT", "PDF", "EXCEL", "ALL" (untuk mengekspor semua file data).                                                                       |
-| date     | Object | Objek dengan properti `start_date` dan `end_date` yang menentukan rentang tanggal untuk ekspor data. Format: "DD-MM-YYYY".                                                                                        |
-| data     | Array  | Data yang akan diekspor. Jika ingin menggunakan pengelompokan (grouping), berikan detail penggunaannya di dalam array. Setiap elemen array mewakili kolom atau properti berdasarkan mana data akan dikelompokkan. |
+| Properti | Tipe   | Deskripsi                                                                                                                                   |
+| -------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| type     | String | Tipe data ekspor, menentukan format file yang akan diekspor. Nilai contoh: "TXT", "PDF", "EXCEL", "ALL" (untuk mengekspor semua file data). |
+| date     | Object | Objek dengan properti `start_date` dan `end_date` yang menentukan rentang tanggal untuk ekspor data. Format: "DD-MM-YYYY".                  |
+| data     | Array  | Data yang akan diekspor. jika ingin menggunakan grouping datanya ada detail dalaman pengunaannya                                            |
 
 |
 columns | Array | Kolom-kolom data yang akan diekspor. |
