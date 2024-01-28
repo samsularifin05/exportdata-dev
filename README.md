@@ -147,7 +147,7 @@ Daftar properti yang tersedia dapat ditemukan di bawah. Ini harus diteruskan ke 
 | date         | Object  | Objek dengan properti `start_date` dan `end_date` yang menentukan rentang tanggal untuk ekspor data. Format: "DD-MM-YYYY".                                                                                      |
 | data         | Array   | Data yang akan diekspor.                                                                                                                                                                                        |
 | columns      | Array   | Kolom-kolom data yang akan diekspor.                                                                                                                                                                            |
-| grouping     | Array   | Array yang menentukan pengaturan pengelompokan untuk data yang diekspor.                                                                                                                                        |
+| grouping     | Array   | Array yang menentukan pengaturan pengelompokan untuk data yang diekspor.  contoh `[no_faktur]`                                                                                                                                      |
 |  |
 | excelSetting | Object  | Pengaturan khusus untuk ekspor Excel, termasuk `titleExcel`, `bgColor`, `txtColor`, dan `grandTotalSetting` dengan `colSpan`.                                                                                   |
 | txtSetting   | Object  | Pengaturan khusus untuk ekspor TXT, termasuk `dataTxt`, `titleTxt`, dan `templateTxt` yang berisi template untuk file TXT dengan placeholder.                                                                   |
