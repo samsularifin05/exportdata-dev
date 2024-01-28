@@ -154,8 +154,6 @@ Daftar properti yang tersedia dapat ditemukan di bawah. Ini harus diteruskan ke 
 |          |        | - halign (opsional): Penyelarasan horizontal untuk data dalam kolom.                                                                                                                                                    |
 |          |        | - disabledColumn (opsional): Jika true, kolom akan dinonaktifkan dalam data yang diekspor.                                                                                                                              |
 |          |        | - disabledFooter (opsional): Jika true, kolom akan dinonaktifkan dalam bagian footer (grand total).                                                                                                                     
-
-| Example usage | [{ key: "no_faktur", label: "Nomor Faktur", options: { format: "string", halign: "center" } }, { key: "jumlah", label: "Jumlah", options: { format: "number", disabledColumn: true, disabledFooter: false } }] |
 | grouping | Array | Array yang menentukan pengaturan pengelompokan untuk data yang diekspor. contoh `[no_faktur]` |
 | excelSetting | Object | Pengaturan khusus untuk ekspor Excel, termasuk `titleExcel`, `bgColor`, `txtColor`, dan `grandTotalSetting` dengan `colSpan`. |
 | txtSetting | Object | Pengaturan khusus untuk ekspor TXT, termasuk `dataTxt`, `titleTxt`, dan `templateTxt` yang berisi template untuk file TXT dengan placeholder. |
