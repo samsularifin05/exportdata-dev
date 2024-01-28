@@ -141,6 +141,15 @@ export default DemoPage;
 Option
 Daftar properti yang tersedia dapat ditemukan di bawah. Ini harus diteruskan ke komponen ExportDataFile.
 
-| Property | Type   | Description                                                                                                                                |
-| -------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| type     | String | Type export data yang menentukan file apa yang akan di export Contohnya : "TXT","PDF","EXCEL","ALL", (ALL untuk semua data file di export) |
+| Properti     | Tipe    | Deskripsi                                                                                                                                                                                                       |
+| ------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| type         | String  | Tipe data ekspor, menentukan format file yang akan diekspor. Nilai contoh: "TXT", "PDF", "EXCEL", "ALL" (untuk mengekspor semua file data).                                                                     |
+| date         | Object  | Objek dengan properti `start_date` dan `end_date` yang menentukan rentang tanggal untuk ekspor data. Format: "DD-MM-YYYY".                                                                                      |
+| data         | Array   | Data yang akan diekspor.                                                                                                                                                                                        |
+| columns      | Array   | Kolom-kolom data yang akan diekspor.                                                                                                                                                                            |
+| grouping     | Array   | Array yang menentukan pengaturan pengelompokan untuk data yang diekspor.                                                                                                                                        |
+| excelSetting | Object  | Pengaturan khusus untuk ekspor Excel, termasuk `titleExcel`, `bgColor`, `txtColor`, dan `grandTotalSetting` dengan `colSpan`.                                                                                   |
+| txtSetting   | Object  | Pengaturan khusus untuk ekspor TXT, termasuk `dataTxt`, `titleTxt`, dan `templateTxt` yang berisi template untuk file TXT dengan placeholder.                                                                   |
+| pdfSetting   | Object  | Pengaturan khusus untuk ekspor PDF, termasuk `titlePdf`, `orientation`, `unit`, `bgColor`, `txtColor`, `theme`, `grandTotalSetting` dengan `colSpan`, dan `openNewTab` untuk membuka PDF di tab baru (boolean). |
+| templateTxt  | String  | Template untuk file TXT dengan placeholder untuk konten dinamis.                                                                                                                                                |
+| openNewTab   | Boolean | Jika true, membuka file PDF yang diekspor di tab baru.                                                                                                                                                          |
