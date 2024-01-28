@@ -153,7 +153,7 @@ Daftar properti yang tersedia dapat ditemukan di bawah. Ini harus diteruskan ke 
 |          |        | - format (opsional): Tipe format untuk data dalam kolom (misalnya, tipe tanggal atau angka).                                                                                                                            |
 |          |        | - halign (opsional): Penyelarasan horizontal untuk data dalam kolom.                                                                                                                                                    |
 |          |        | - disabledColumn (opsional): Jika true, kolom akan dinonaktifkan dalam data yang diekspor.                                                                                                                              |
-|          |        | - disabledFooter (opsional): Jika true, kolom akan dinonaktifkan dalam bagian footer (grand total).                                                                                                                     |
+|          |        | - disabledFooter (opsional): Jika true, kolom akan dinonaktifkan dalam bagian footer (grand total).                                                                                                                     
 
 | Example usage | [{ key: "no_faktur", label: "Nomor Faktur", options: { format: "string", halign: "center" } }, { key: "jumlah", label: "Jumlah", options: { format: "number", disabledColumn: true, disabledFooter: false } }] |
 | grouping | Array | Array yang menentukan pengaturan pengelompokan untuk data yang diekspor. contoh `[no_faktur]` |
