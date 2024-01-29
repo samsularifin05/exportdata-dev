@@ -82,11 +82,6 @@ const generateNotaSlip = (res: Res): string[] => {
           if (key === "intenal_external") {
             return index === 0 ? "Pelanggan" : "Internal";
           }
-          if (key === "syarat_ketentuan") {
-            return index === 1
-              ? ""
-              : "Kondisi / Syarat Perjanjian Jual Beli\n-------------------------------------\n1.Penjual menyatakan barang tersebut \nadalah miliknya yang sah dan tidak da\nlam sengketa dengan pihak manapun.\n\n2. Pembeli memberikan tolenransi sel\nama-lamanya 3 bulan sejak perjanjian \nini untuk penjual membeli kembali \nbarang tersebut\n\n3. Penjual menyatakan apabila setelah \nlewat dari 3 bulan tidak membeli kemb-\nali  barang tersebut, berarti telah \nmenjual  secara sah dan memberikan hak \npenuh kepada pembeli atas barang terse-\nbut, serta membebaskan pembeli dari se-\ngala resiko gugatan atas barang tersebut.\n\n4.Penjual dan pembeli mengikatkan diri \npada perjanjian ini tanpa adanya paksa-\nan dari pihak manapun.";
-          }
           if (key.match(/auto_cut/)) {
             return "\nVA";
           }
