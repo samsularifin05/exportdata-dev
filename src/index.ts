@@ -25,7 +25,8 @@ export const ExportData = <T>({
   txtSetting,
   pdfSetting,
   excelSetting,
-  title
+  title,
+  footerSetting
 }: GenaratorExport<T>): void => {
   const databaru = {
     data: txtSetting?.dataTxt?.length
@@ -43,7 +44,8 @@ export const ExportData = <T>({
         type,
         columns,
         grouping,
-        title
+        title,
+        footerSetting
       });
     } else if (list === "TXT") {
       ExportToTxt(databaru, txtSetting?.titleTxt || "");
@@ -55,7 +57,8 @@ export const ExportData = <T>({
         columns,
         grouping,
         excelSetting,
-        title
+        title,
+        footerSetting
       });
     } else {
       ExportExcel({
@@ -65,7 +68,8 @@ export const ExportData = <T>({
         columns,
         grouping,
         excelSetting,
-        title
+        title,
+        footerSetting
       });
 
       ExportPDF({
@@ -75,7 +79,8 @@ export const ExportData = <T>({
         type,
         columns,
         grouping,
-        title
+        title,
+        footerSetting
       });
 
       ExportToTxt(databaru, txtSetting?.titleTxt || "");
