@@ -5,14 +5,14 @@ export interface ColumnGenarator<T> {
   label?: string;
   options?: {
     format?: FormatType;
-    barcodeOption?: {
-      showText: boolean;
-      format: "qrcode" | "code128";
-      widthBarcode?: number;
-      heightBarcode?: number;
-      widthColumn?: number;
-      heightColumn?: number;
-    };
+    // barcodeOption?: {
+    //   showText: boolean;
+    //   format: "qrcode" | "code128";
+    //   widthBarcode?: number;
+    //   heightBarcode?: number;
+    //   widthColumn?: number;
+    //   heightColumn?: number;
+    // };
     halign?: HalignType;
     disabledColumn?: boolean;
     disabledFooter?: boolean;

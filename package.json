@@ -1,6 +1,6 @@
 {
   "name": "exportdatafile",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "main": "dist/index.js",
   "repository": "https://github.com/samsularifin05/exportdatafile",
   "description": "Export Data Excel Pdf and Txt",
@@ -33,7 +33,6 @@
   "author": "samsularifin05",
   "license": "ISC",
   "dependencies": {
-    "bwip-js": "^4.3.2",
     "exceljs": "^4.4.0",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.8.1"

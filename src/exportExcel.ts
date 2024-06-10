@@ -1,4 +1,4 @@
-import BwipJs from "bwip-js/browser";
+// import BwipJs from "bwip-js/browser";
 import { convertDateTime } from "./helpers";
 import {
   ColumnGenarator,
@@ -239,9 +239,9 @@ const ExportExcel = async <T>({
               ? "#,##0"
               : column?.options?.format === "GR"
               ? "#,##0.000"
-              : column?.options?.barcodeOption !== undefined
-              ? "BARCODE"
-              : undefined
+              : // : column?.options?.barcodeOption !== undefined
+                // ? "BARCODE"
+                undefined
         };
       });
 
@@ -252,45 +252,45 @@ const ExportExcel = async <T>({
 
         // console.log(cellData.options?.showTextBarcode);
 
-        const barcodeOption = cellData.options?.barcodeOption;
-        if (barcodeOption !== undefined) {
-          // console.log(worksheet.getColumn("A4").number);
-          const canvas = document.createElement("canvas");
-          BwipJs.toCanvas(canvas, {
-            bcid: barcodeOption.format || "code128", // Barcode type
-            text: String(cellData.value), // Text to encode
-            scale: 3, // 3x scaling factor
-            height: 10, // Bar height, in millimeters
-            includetext: barcodeOption.showText || true, // Show human-readable text
-            textxalign: "center"
-          });
+        // const barcodeOption = cellData.options?.barcodeOption;
+        // if (barcodeOption !== undefined) {
+        //   // console.log(worksheet.getColumn("A4").number);
+        //   const canvas = document.createElement("canvas");
+        //   BwipJs.toCanvas(canvas, {
+        //     bcid: barcodeOption.format || "code128", // Barcode type
+        //     text: String(cellData.value), // Text to encode
+        //     scale: 3, // 3x scaling factor
+        //     height: 10, // Bar height, in millimeters
+        //     includetext: barcodeOption.showText || true, // Show human-readable text
+        //     textxalign: "center"
+        //   });
 
-          const imageId = cell.workbook.addImage({
-            base64: canvas.toDataURL("image/png"),
-            extension: "png"
-          });
+        //   const imageId = cell.workbook.addImage({
+        //     base64: canvas.toDataURL("image/png"),
+        //     extension: "png"
+        //   });
 
-          row.height = barcodeOption.heightColumn || 39;
-          const firstColumn = worksheet.getColumn(index + 1);
-          firstColumn.width = barcodeOption.widthColumn || 12;
+        //   row.height = barcodeOption.heightColumn || 39;
+        //   const firstColumn = worksheet.getColumn(index + 1);
+        //   firstColumn.width = barcodeOption.widthColumn || 12;
 
-          worksheet.addImage(imageId, {
-            tl: {
-              col: index + 1 - 1,
-              row: Number(cell.row || 0) - 1
-            }, // Gunakan nomor baris yang benar
-            ext: {
-              width: barcodeOption.widthBarcode || 100,
-              height: barcodeOption.heightBarcode || 50
-            } // Sesuaikan dengan ukuran gambar Anda
-          });
+        //   worksheet.addImage(imageId, {
+        //     tl: {
+        //       col: index + 1 - 1,
+        //       row: Number(cell.row || 0) - 1
+        //     }, // Gunakan nomor baris yang benar
+        //     ext: {
+        //       width: barcodeOption.widthBarcode || 100,
+        //       height: barcodeOption.heightBarcode || 50
+        //     } // Sesuaikan dengan ukuran gambar Anda
+        //   });
 
-          cell.alignment = { horizontal: "center" };
+        //   cell.alignment = { horizontal: "center" };
 
-          cell.value = "";
-          // Tidak perlu mengembalikan nilai untuk kolom gambar barcode
-          return null;
-        }
+        //   cell.value = "";
+        //   // Tidak perlu mengembalikan nilai untuk kolom gambar barcode
+        //   return null;
+        // }
         const vertical = cellData.alignment.vertical
           ? String(cellData.alignment.vertical || "bottom")
           : "bottom";
