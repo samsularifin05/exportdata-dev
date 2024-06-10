@@ -5,6 +5,14 @@ export interface ColumnGenarator<T> {
   label?: string;
   options?: {
     format?: FormatType;
+    barcodeOption?: {
+      showText: boolean;
+      format: "qrcode" | "code128";
+      widthBarcode?: number;
+      heightBarcode?: number;
+      widthColumn?: number;
+      heightColumn?: number;
+    };
     halign?: HalignType;
     disabledColumn?: boolean;
     disabledFooter?: boolean;
@@ -18,7 +26,9 @@ export interface GenaratorExport<T> {
   grouping: string[];
   columns: ColumnGenarator<T>[];
   data: DataItemGenerator[];
-  type: "EXCEL" | "PDF" | "TXT" | "ALL";
+  type: ("EXCEL" | "PDF" | "TXT" | "ALL")[];
+  title?: string;
+
   pdfSetting?: {
     orientation?: "p" | "portrait" | "l" | "landscape";
     unit?: "pt" | "px" | "in" | "mm" | "cm" | "ex" | "em" | "pc";
@@ -26,8 +36,10 @@ export interface GenaratorExport<T> {
     height?: number;
     fontSIze?: number;
     bgColor?: string;
-    titlePdf: string;
+    titlePdf?: string;
     txtColor?: string;
+    textHeaderRight?: string;
+    textHeaderLeft?: string;
     theme?: "grid" | "striped" | "plain";
     grandTotalSetting?: {
       disableGrandTotal?: boolean;
@@ -40,14 +52,15 @@ export interface GenaratorExport<T> {
     end_date?: string;
   };
   txtSetting?: {
-    dataTxt: DataItemGenerator[] | DataItemGenerator;
+    dataTxt?: DataItemGenerator[] | DataItemGenerator;
     titleTxt: string;
     templateTxt?: string;
   };
   excelSetting?: {
-    titleExcel: string;
+    titleExcel?: string;
     bgColor?: string;
     txtColor?: string;
+    additionalTextHeader?: string;
     grandTotalSetting?: {
       disableGrandTotal?: boolean;
       colSpan?: number;

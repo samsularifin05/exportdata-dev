@@ -1,52 +1,66 @@
 import { DataItemGenerator, GenaratorExport } from "./interface";
 import { convertDateTime } from "./helpers";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 const ExportPDF = <T>({
   columns,
   data,
   grouping,
   pdfSetting,
-  date
+  date,
+  title
 }: GenaratorExport<T>): void => {
-  const doc: any = new jsPDF(pdfSetting?.orientation, pdfSetting?.unit, [
+  const doc: jsPDF = new jsPDF(pdfSetting?.orientation, pdfSetting?.unit, [
     pdfSetting?.width || 297,
     pdfSetting?.height || 210
   ]);
-  const tableRows: any[] = [];
+  let tableRows: any[] = [];
   let finalY = date ? 30 : 20;
   columns = columns.filter((item) => !item.options?.disabledColumn);
 
-  doc.setFontSize(15);
-  doc.text(pdfSetting?.titlePdf, 15, 18);
   doc.setFontSize(10);
+  const widthPortrait = doc.internal.pageSize.getWidth();
+
+  const headerLeft = doc.splitTextToSize(pdfSetting?.textHeaderLeft || "", 110);
+  doc.text(headerLeft, 15, 18);
+
+  //Text Kanan
+  doc.text(`${title || pdfSetting?.titlePdf}`, widthPortrait - 15, 18, {
+    align: "right"
+  });
+
   if (date) {
     doc.text(
       `Tanggal : ${date?.start_date} ${
         date?.end_date ? `s/d ${date?.end_date}` : ""
       }`,
-      15,
-      25
+      widthPortrait - 15,
+      22,
+      { align: "right" }
     );
   }
   doc.setProperties({
-    title: pdfSetting?.titlePdf
+    title: title || pdfSetting?.titlePdf
   });
 
   // Header Tabel
-  const tableHeader = columns.map((column) => ({
-    content: column.label,
-    styles: {
-      textColor: `#${pdfSetting?.txtColor || "000"}`,
-      fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
-      fontStyle: "bold",
-      halign: column?.options?.halign
-        ? column?.options?.halign
-        : column?.options?.format === "RP" || column?.options?.format === "GR"
-        ? "right"
-        : "left"
-    }
-  }));
+  const tableHeader = columns.map((column) => {
+    return {
+      content: column.label,
+      key: column.key,
+      options: column?.options,
+      styles: {
+        textColor: `#${pdfSetting?.txtColor || "000"}`,
+        fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
+        fontStyle: "bold",
+        halign: column?.options?.halign
+          ? column?.options?.halign
+          : column?.options?.format === "RP" || column?.options?.format === "GR"
+          ? "right"
+          : "left"
+      }
+    };
+  });
 
   tableRows.push(tableHeader);
 
@@ -175,6 +189,7 @@ const ExportPDF = <T>({
         const columnKey = column.key as keyof DataItemGenerator;
         totals[columnKey] = (totals[columnKey] || 0) + Number(value);
         return {
+          options: column?.options,
           content: (() => {
             switch (column?.options?.format) {
               case "RP":
@@ -222,6 +237,7 @@ const ExportPDF = <T>({
     const total = totals[column.key as keyof DataItemGenerator];
     if (column?.options?.format === "RP" || column?.options?.format === "GR") {
       const row = {
+        options: column?.options,
         content: column?.options?.disabledFooter
           ? ""
           : (() => {
@@ -251,6 +267,7 @@ const ExportPDF = <T>({
     } else {
       grandTotal.push({
         content: "",
+        options: column?.options,
         styles: {
           textColor: `#${pdfSetting?.txtColor || "000"}`,
           fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
@@ -294,7 +311,7 @@ const ExportPDF = <T>({
     }
   ]);
 
-  doc.autoTable({
+  autoTable(doc, {
     head: [],
     body: tableRows,
     startY: finalY,
@@ -306,12 +323,14 @@ const ExportPDF = <T>({
       fontSize: pdfSetting?.fontSIze || 8,
       textColor: `#${pdfSetting?.txtColor || "000"}`,
       fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`
-    }
+    },
+    tableLineColor: [255, 255, 255]
   });
+  tableRows = [];
+  finalY = (doc as any).lastAutoTable.finalY;
+  +3;
 
-  finalY = doc.autoTableEndPosY() + 3;
-
-  const pages = doc.internal.getNumberOfPages();
+  const pages = (doc as any).internal.getNumberOfPages();
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
 
@@ -330,7 +349,7 @@ const ExportPDF = <T>({
     const blob = doc.output("bloburl");
     window.open(blob);
   } else {
-    doc.save(`${pdfSetting?.titlePdf}.pdf`);
+    doc.save(`${title || pdfSetting?.titlePdf}.pdf`);
   }
 };
 

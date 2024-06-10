@@ -1,3 +1,4 @@
+import BwipJs from "bwip-js/browser";
 import { convertDateTime } from "./helpers";
 import {
   ColumnGenarator,
@@ -11,16 +12,18 @@ const ExportExcel = async <T>({
   data,
   grouping,
   date,
-  excelSetting
+  excelSetting,
+  title
 }: GenaratorExport<T>): Promise<void> => {
   const workbook = new ExcelJS.Workbook();
   columns = columns.filter((item) => !item.options?.disabledColumn);
-  const worksheet = workbook.addWorksheet(excelSetting?.titleExcel);
+  const worksheet = workbook.addWorksheet(title || excelSetting?.titleExcel);
 
   const lastUsedColumnIndex = columns.length;
+
   // Judul
   const judul = worksheet.addRow([]);
-  judul.getCell(1).value = excelSetting?.titleExcel;
+  judul.getCell(1).value = title || excelSetting?.titleExcel;
   judul.getCell(1).alignment = { horizontal: "center" };
   worksheet.mergeCells(
     `A${judul.number}:${String.fromCharCode(64 + lastUsedColumnIndex)}${
@@ -57,6 +60,19 @@ const ExportExcel = async <T>({
       };
     });
   }
+
+  // additional
+  const additionalText = worksheet.addRow([]);
+  additionalText.getCell(1).value = excelSetting?.additionalTextHeader || "";
+  additionalText.getCell(1).alignment = { horizontal: "center" };
+  worksheet.mergeCells(
+    `A${additionalText.number}:${String.fromCharCode(
+      64 + lastUsedColumnIndex
+    )}${additionalText.number}`
+  );
+  additionalText.eachCell((cell) => {
+    cell.font = { color: { argb: "000000" }, bold: true, size: 12 };
+  });
 
   // Menambahkan header ke worksheet
   const headerColumn = worksheet.addRow(columns);
@@ -176,6 +192,13 @@ const ExportExcel = async <T>({
           subtotalRow.getCell(columnIndex + 1).value = "";
         }
       });
+      if (excelSetting?.grandTotalSetting?.colSpan) {
+        worksheet.mergeCells(
+          `A${subtotalRow.number}:${String.fromCharCode(
+            64 + Number(excelSetting?.grandTotalSetting?.colSpan)
+          )}${subtotalRow.number}`
+        );
+      }
       subtotalRow.eachCell((cell) => {
         cell.fill = {
           type: "pattern",
@@ -195,6 +218,7 @@ const ExportExcel = async <T>({
             ? convertDateTime(item[column.key as keyof DataItemGenerator])
             : item[column.key as keyof DataItemGenerator];
         const alignment = {
+          vertical: "middle",
           horizontal: column?.options?.halign
             ? column?.options?.halign
             : column?.options?.format === "RP" ||
@@ -202,17 +226,21 @@ const ExportExcel = async <T>({
             ? "right"
             : "left" || "right"
         };
+
         const columnKey = column.key as keyof DataItemGenerator;
         totals[columnKey] = (totals[columnKey] || 0) + Number(value);
 
         return {
           value,
+          options: column?.options,
           alignment,
           numFmt:
             column?.options?.format === "RP"
               ? "#,##0"
               : column?.options?.format === "GR"
               ? "#,##0.000"
+              : column?.options?.barcodeOption !== undefined
+              ? "BARCODE"
               : undefined
         };
       });
@@ -221,7 +249,69 @@ const ExportExcel = async <T>({
 
       rowData.forEach((cellData, index) => {
         const cell = row.getCell(index + 1);
-        cell.alignment = cellData.alignment;
+
+        // console.log(cellData.options?.showTextBarcode);
+
+        const barcodeOption = cellData.options?.barcodeOption;
+        if (barcodeOption !== undefined) {
+          // console.log(worksheet.getColumn("A4").number);
+          const canvas = document.createElement("canvas");
+          BwipJs.toCanvas(canvas, {
+            bcid: barcodeOption.format || "code128", // Barcode type
+            text: String(cellData.value), // Text to encode
+            scale: 3, // 3x scaling factor
+            height: 10, // Bar height, in millimeters
+            includetext: barcodeOption.showText || true, // Show human-readable text
+            textxalign: "center"
+          });
+
+          const imageId = cell.workbook.addImage({
+            base64: canvas.toDataURL("image/png"),
+            extension: "png"
+          });
+
+          row.height = barcodeOption.heightColumn || 39;
+          const firstColumn = worksheet.getColumn(index + 1);
+          firstColumn.width = barcodeOption.widthColumn || 12;
+
+          worksheet.addImage(imageId, {
+            tl: {
+              col: index + 1 - 1,
+              row: Number(cell.row || 0) - 1
+            }, // Gunakan nomor baris yang benar
+            ext: {
+              width: barcodeOption.widthBarcode || 100,
+              height: barcodeOption.heightBarcode || 50
+            } // Sesuaikan dengan ukuran gambar Anda
+          });
+
+          cell.alignment = { horizontal: "center" };
+
+          cell.value = "";
+          // Tidak perlu mengembalikan nilai untuk kolom gambar barcode
+          return null;
+        }
+        const vertical = cellData.alignment.vertical
+          ? String(cellData.alignment.vertical || "bottom")
+          : "bottom";
+
+        let verticalAlignment: any = ""; // Default value
+
+        // Check if the value is valid and assign it
+        if (
+          vertical === "middle" ||
+          vertical === "bottom" ||
+          vertical === "justify" ||
+          vertical === "distributed" ||
+          vertical === "top"
+        ) {
+          verticalAlignment = vertical as any;
+        }
+
+        cell.alignment = {
+          horizontal: cellData.alignment.horizontal,
+          vertical: verticalAlignment
+        };
 
         if (cellData.numFmt) {
           cell.numFmt = cellData.numFmt;
@@ -242,9 +332,6 @@ const ExportExcel = async <T>({
       const grandTotalCell = grandTotalRow.getCell(columnIndex + 1);
       grandTotalRow.getCell(1).value = "GRAND TOTAL";
       grandTotalRow.getCell(1).alignment = { horizontal: "center" };
-
-      // Explicitly cast the cell to CellValue to set numFmt
-      // console.log(column?.options.disabledFooter);
 
       (grandTotalCell as any).numFmt =
         column?.options?.format === "GR" ? "#,##0.000" : "#,##0";
@@ -283,7 +370,7 @@ const ExportExcel = async <T>({
   });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = `${excelSetting?.titleExcel}.xlsx`;
+  link.download = `${title || excelSetting?.titleExcel}.xlsx`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
