@@ -24,7 +24,6 @@ export interface DataItemGenerator {
 }
 
 export interface GenaratorExport<T> {
-  grouping: string[];
   columns: ColumnGenarator<T>[];
   data: DataItemGenerator[];
   type: ("EXCEL" | "PDF" | "TXT" | "ALL")[];
@@ -51,6 +50,7 @@ export interface GenaratorExport<T> {
   date?: {
     start_date?: string;
     end_date?: string;
+    caption?: string;
   };
   txtSetting?: {
     dataTxt?: DataItemGenerator[] | DataItemGenerator;
@@ -65,6 +65,19 @@ export interface GenaratorExport<T> {
     grandTotalSetting?: {
       disableGrandTotal?: boolean;
       colSpan?: number;
+    };
+  };
+  grouping: string[];
+  footerSetting?: {
+    subTotal?: {
+      caption?: string;
+      enableCount?: boolean;
+      captionItem?: string;
+    };
+    grandTotal?: {
+      caption?: string;
+      captionItem?: string;
+      enableCount?: boolean;
     };
   };
 }

@@ -8,7 +8,8 @@ const ExportPDF = <T>({
   grouping,
   pdfSetting,
   date,
-  title
+  title,
+  footerSetting
 }: GenaratorExport<T>): void => {
   const doc: jsPDF = new jsPDF(pdfSetting?.orientation, pdfSetting?.unit, [
     pdfSetting?.width || 297,
@@ -31,7 +32,7 @@ const ExportPDF = <T>({
 
   if (date) {
     doc.text(
-      `Tanggal : ${date?.start_date} ${
+      `${date.caption ? date.caption : "TANGGAL "} : ${date?.start_date} ${
         date?.end_date ? `s/d ${date?.end_date}` : ""
       }`,
       widthPortrait - 15,
@@ -170,7 +171,13 @@ const ExportPDF = <T>({
         ? Number(pdfSetting?.grandTotalSetting?.colSpan || 0) + 1
         : 0;
       footersubtotal[0] = {
-        content: "SUB TOTAL",
+        content: `${footerSetting?.subTotal?.caption || "SUB TOTAL"} ${
+          footerSetting?.subTotal?.enableCount && `: ${item.detail.length}`
+        } ${
+          (footerSetting?.subTotal?.captionItem &&
+            footerSetting.subTotal.captionItem) ||
+          ""
+        }`,
         colSpan: colSpan,
         styles: {
           textColor: `#${pdfSetting?.txtColor || "000"}`,
@@ -282,8 +289,20 @@ const ExportPDF = <T>({
     : 0;
 
   if (!pdfSetting?.grandTotalSetting?.disableGrandTotal) {
+    // console.log(data);
     grandTotal[0] = {
-      content: "GRAND TOTAL",
+      content: `${footerSetting?.grandTotal?.caption || "GRAND TOTAL"} ${
+        footerSetting?.grandTotal?.enableCount &&
+        ` : ${
+          grouping.length > 0
+            ? data.map((list) => list.detail.length).reduce((a, b) => a + b, 0)
+            : data.length
+        } ${
+          (footerSetting.grandTotal.captionItem &&
+            footerSetting.grandTotal.captionItem) ||
+          ""
+        }`
+      }`,
       colSpan: colSpan,
       styles: {
         textColor: `#${pdfSetting?.txtColor || "000"}`,

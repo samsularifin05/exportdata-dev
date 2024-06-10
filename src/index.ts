@@ -2,7 +2,6 @@ import ExportExcel from "./exportExcel";
 import ExportPDF from "./exportPdf";
 import ExportToTxt from "./exportTextFile";
 import { GenaratorExport } from "./interface";
-export * from "./interface";
 
 /**
  * Ekspor ke PDF atau Excel berdasarkan konfigurasi yang diberikan.
@@ -82,5 +81,6 @@ export const ExportData = <T>({
       ExportToTxt(databaru, txtSetting?.titleTxt || "");
     }
   });
-  // if (type === "PDF") {
 };
+
+export type { GenaratorExport };

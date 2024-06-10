@@ -13,7 +13,8 @@ const ExportExcel = async <T>({
   grouping,
   date,
   excelSetting,
-  title
+  title,
+  footerSetting
 }: GenaratorExport<T>): Promise<void> => {
   const workbook = new ExcelJS.Workbook();
   columns = columns.filter((item) => !item.options?.disabledColumn);
@@ -41,9 +42,9 @@ const ExportExcel = async <T>({
   // Tanggal
   if (date) {
     const tanggalRow = worksheet.addRow([]);
-    tanggalRow.getCell(1).value = `Tanggal : ${date?.start_date} ${
-      date?.end_date ? `s/d ${date?.end_date}` : ""
-    }`;
+    tanggalRow.getCell(1).value = `${
+      date.caption ? date.caption : "Tanggal "
+    } : ${date?.start_date} ${date?.end_date ? `s/d ${date?.end_date}` : ""}`;
     tanggalRow.getCell(1).alignment = { horizontal: "center" };
 
     // Menggabungkan sel dari kolom A hingga kolom terakhir yang tidak terpakai pada baris tanggal
@@ -177,8 +178,16 @@ const ExportExcel = async <T>({
             65 + columnIndex
           )}${startRow}:${String.fromCharCode(65 + columnIndex)}${endRow})`;
           const grandTotalCell = subtotalRow.getCell(columnIndex + 1);
-          subtotalRow.getCell(1).value = "SUB TOTAL";
-          subtotalRow.getCell(1).alignment = { horizontal: "center" };
+          (subtotalRow.getCell(1).value = `${
+            footerSetting?.subTotal?.caption || "SUB TOTAL"
+          } ${
+            footerSetting?.subTotal?.enableCount && `: ${item.detail.length}`
+          } ${
+            (footerSetting?.subTotal?.captionItem &&
+              footerSetting.subTotal.captionItem) ||
+            ""
+          }`),
+            (subtotalRow.getCell(1).alignment = { horizontal: "center" });
 
           // Explicitly cast the cell to CellValue to set numFmt
           (grandTotalCell as any).numFmt =
@@ -240,7 +249,7 @@ const ExportExcel = async <T>({
               : column?.options?.format === "GR"
               ? "#,##0.000"
               : // : column?.options?.barcodeOption !== undefined
-                // ? "BARCODE"
+                //   ? "BARCODE"
                 undefined
         };
       });
@@ -262,12 +271,12 @@ const ExportExcel = async <T>({
         //     scale: 3, // 3x scaling factor
         //     height: 10, // Bar height, in millimeters
         //     includetext: barcodeOption.showText || true, // Show human-readable text
-        //     textxalign: "center"
+        //     textxalign: "center",
         //   });
 
         //   const imageId = cell.workbook.addImage({
         //     base64: canvas.toDataURL("image/png"),
-        //     extension: "png"
+        //     extension: "png",
         //   });
 
         //   row.height = barcodeOption.heightColumn || 39;
@@ -277,12 +286,12 @@ const ExportExcel = async <T>({
         //   worksheet.addImage(imageId, {
         //     tl: {
         //       col: index + 1 - 1,
-        //       row: Number(cell.row || 0) - 1
+        //       row: Number(cell.row || 0) - 1,
         //     }, // Gunakan nomor baris yang benar
         //     ext: {
         //       width: barcodeOption.widthBarcode || 100,
-        //       height: barcodeOption.heightBarcode || 50
-        //     } // Sesuaikan dengan ukuran gambar Anda
+        //       height: barcodeOption.heightBarcode || 50,
+        //     }, // Sesuaikan dengan ukuran gambar Anda
         //   });
 
         //   cell.alignment = { horizontal: "center" };
@@ -330,7 +339,21 @@ const ExportExcel = async <T>({
         65 + columnIndex
       )}${startRow}:${String.fromCharCode(65 + columnIndex)}${endRow})`;
       const grandTotalCell = grandTotalRow.getCell(columnIndex + 1);
-      grandTotalRow.getCell(1).value = "GRAND TOTAL";
+      // content: ,
+
+      grandTotalRow.getCell(1).value = `
+        ${footerSetting?.grandTotal?.caption || "GRAND TOTAL"} ${
+        footerSetting?.grandTotal?.enableCount &&
+        ` : ${
+          grouping.length > 0
+            ? data.map((list) => list.detail.length).reduce((a, b) => a + b, 0)
+            : data.length
+        } ${
+          (footerSetting.grandTotal.captionItem &&
+            footerSetting.grandTotal.captionItem) ||
+          ""
+        }`
+      }`;
       grandTotalRow.getCell(1).alignment = { horizontal: "center" };
 
       (grandTotalCell as any).numFmt =
