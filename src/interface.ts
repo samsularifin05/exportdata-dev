@@ -18,6 +18,7 @@ export interface ColumnGenarator<T> {
     disabledFooter?: boolean;
   };
 }
+
 export interface DataItemGenerator {
   [key: string]: any;
 }
