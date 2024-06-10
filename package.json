@@ -1,6 +1,6 @@
 {
   "name": "exportdatafile",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "main": "dist/index.js",
   "repository": "https://github.com/samsularifin05/exportdatafile",
   "description": "Export Data Excel Pdf and Txt",
@@ -27,7 +27,8 @@
     "clean": true
   },
   "scripts": {
-    "build": "tsup && sh ./helper/build-prod.sh"
+    "build": "tsup && sh ./helper/build-prod.sh",
+    "publish": "npm publish"
   },
   "author": "samsularifin05",
   "license": "ISC",
