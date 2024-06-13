@@ -362,8 +362,7 @@ const ExportExcel = async <T>({
         ? footerSetting?.grandTotal?.captionItem
         : "";
 
-      grandTotalRow.getCell(1).value = `
-      ${
+      grandTotalRow.getCell(1).value = `${
         footerSetting?.grandTotal?.caption || "GRAND TOTAL"
       } ${GrandTotal} ${caption}`;
       grandTotalRow.getCell(1).alignment = { horizontal: "center" };
