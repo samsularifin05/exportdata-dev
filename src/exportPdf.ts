@@ -170,14 +170,20 @@ const ExportPDF = <T>({
       const colSpan = pdfSetting?.grandTotalSetting?.colSpan
         ? Number(pdfSetting?.grandTotalSetting?.colSpan || 0) + 1
         : 0;
+
+      const subtotalCount = footerSetting?.subTotal?.enableCount
+        ? grouping.length > 0
+          ? " : " + item.detail.length
+          : ""
+        : "";
+
+      const captionSub = footerSetting?.subTotal?.captionItem
+        ? footerSetting?.subTotal?.captionItem
+        : "";
       footersubtotal[0] = {
-        content: `${footerSetting?.subTotal?.caption || "SUB TOTAL"} ${
-          footerSetting?.subTotal?.enableCount && `: ${item.detail.length}`
-        } ${
-          (footerSetting?.subTotal?.captionItem &&
-            footerSetting.subTotal.captionItem) ||
-          ""
-        }`,
+        content: `${
+          footerSetting?.subTotal?.caption || "SUB TOTAL"
+        } ${subtotalCount} ${captionSub}`,
         colSpan: colSpan,
         styles: {
           textColor: `#${pdfSetting?.txtColor || "000"}`,
@@ -289,20 +295,20 @@ const ExportPDF = <T>({
     : 0;
 
   if (!pdfSetting?.grandTotalSetting?.disableGrandTotal) {
-    // console.log(data);
+    const GrandTotal = footerSetting?.grandTotal?.enableCount
+      ? grouping.length > 0
+        ? " : " +
+          data.map((list) => list.detail.length).reduce((a, b) => a + b, 0)
+        : " : " + data.length
+      : "";
+
+    const caption = footerSetting?.grandTotal?.captionItem
+      ? footerSetting?.grandTotal?.captionItem
+      : "";
     grandTotal[0] = {
-      content: `${footerSetting?.grandTotal?.caption || "GRAND TOTAL"} ${
-        footerSetting?.grandTotal?.enableCount &&
-        ` : ${
-          grouping.length > 0
-            ? data.map((list) => list.detail.length).reduce((a, b) => a + b, 0)
-            : data.length
-        } ${
-          (footerSetting.grandTotal.captionItem &&
-            footerSetting.grandTotal.captionItem) ||
-          ""
-        }`
-      }`,
+      content: `${
+        footerSetting?.grandTotal?.caption || "GRAND TOTAL"
+      } ${GrandTotal} ${caption}`,
       colSpan: colSpan,
       styles: {
         textColor: `#${pdfSetting?.txtColor || "000"}`,

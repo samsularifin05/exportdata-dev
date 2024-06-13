@@ -1,6 +1,7 @@
 import ExportExcel from "./exportExcel";
 import ExportPDF from "./exportPdf";
 import ExportToTxt from "./exportTextFile";
+import { validateFileTypes } from "./helpers";
 import { GenaratorExport } from "./interface";
 
 /**
@@ -15,6 +16,7 @@ import { GenaratorExport } from "./interface";
  * @param txtSetting - Opsi untuk config Txt file.
  * @param date - Rentang tanggal untuk laporan.
  * @param type - Jenis laporan yang akan diekspor ("PDF" "TXT" atau "EXCEL").
+ * @param footerSetting - Setting Footer Subtotal atau GranTotal
  */
 export const ExportData = <T>({
   columns,
@@ -34,6 +36,17 @@ export const ExportData = <T>({
       : [txtSetting?.dataTxt],
     template: txtSetting?.templateTxt
   };
+
+  if (data.length === 0) {
+    throw new Error("Data is required");
+  }
+  if (type.length === 0) {
+    throw new Error("Type is required");
+  }
+
+  if (!validateFileTypes(type)) {
+    throw new Error(`Type Export must use ["EXCEL", "PDF", "TXT", "ALL"]`);
+  }
 
   type.forEach((list) => {
     if (list === "PDF") {
@@ -68,8 +81,7 @@ export const ExportData = <T>({
         columns,
         grouping,
         excelSetting,
-        title,
-        footerSetting
+        title
       });
 
       ExportPDF({
@@ -79,8 +91,7 @@ export const ExportData = <T>({
         type,
         columns,
         grouping,
-        title,
-        footerSetting
+        title
       });
 
       ExportToTxt(databaru, txtSetting?.titleTxt || "");

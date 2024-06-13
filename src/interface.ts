@@ -23,6 +23,10 @@ export interface DataItemGenerator {
   [key: string]: any;
 }
 
+export type FileType = "EXCEL" | "PDF" | "TXT" | "ALL";
+
+export const validFileTypes: FileType[] = ["EXCEL", "PDF", "TXT", "ALL"];
+
 export interface GenaratorExport<T> {
   columns: ColumnGenarator<T>[];
   data: DataItemGenerator[];

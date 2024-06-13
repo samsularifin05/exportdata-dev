@@ -1,3 +1,5 @@
+import { FileType, validFileTypes } from "./interface";
+
 export function convertDateTime(tgl: string) {
   const now = new Date(tgl);
   const year = now.getFullYear();
@@ -8,4 +10,8 @@ export function convertDateTime(tgl: string) {
   const seconds = String(now.getSeconds()).padStart(2, "0");
   const currentDateTime = `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
   return currentDateTime;
+}
+
+export function validateFileTypes(fileTypes: FileType[]): boolean {
+  return fileTypes.every((fileType) => validFileTypes.includes(fileType));
 }

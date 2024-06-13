@@ -178,15 +178,18 @@ const ExportExcel = async <T>({
             65 + columnIndex
           )}${startRow}:${String.fromCharCode(65 + columnIndex)}${endRow})`;
           const grandTotalCell = subtotalRow.getCell(columnIndex + 1);
+          const subtotalCount = footerSetting?.subTotal?.enableCount
+            ? grouping.length > 0
+              ? " : " + item.detail.length
+              : ""
+            : "";
+
+          const captionSub = footerSetting?.subTotal?.captionItem
+            ? footerSetting?.subTotal?.captionItem
+            : "";
           (subtotalRow.getCell(1).value = `${
             footerSetting?.subTotal?.caption || "SUB TOTAL"
-          } ${
-            footerSetting?.subTotal?.enableCount && `: ${item.detail.length}`
-          } ${
-            (footerSetting?.subTotal?.captionItem &&
-              footerSetting.subTotal.captionItem) ||
-            ""
-          }`),
+          } ${subtotalCount} ${captionSub}`),
             (subtotalRow.getCell(1).alignment = { horizontal: "center" });
 
           // Explicitly cast the cell to CellValue to set numFmt
@@ -340,20 +343,20 @@ const ExportExcel = async <T>({
       )}${startRow}:${String.fromCharCode(65 + columnIndex)}${endRow})`;
       const grandTotalCell = grandTotalRow.getCell(columnIndex + 1);
       // content: ,
+      const GrandTotal = footerSetting?.grandTotal?.enableCount
+        ? grouping.length > 0
+          ? " : " +
+            data.map((list) => list.detail.length).reduce((a, b) => a + b, 0)
+          : " : " + data.length
+        : "";
 
-      grandTotalRow.getCell(1).value = `
-        ${footerSetting?.grandTotal?.caption || "GRAND TOTAL"} ${
-        footerSetting?.grandTotal?.enableCount &&
-        ` : ${
-          grouping.length > 0
-            ? data.map((list) => list.detail.length).reduce((a, b) => a + b, 0)
-            : data.length
-        } ${
-          (footerSetting.grandTotal.captionItem &&
-            footerSetting.grandTotal.captionItem) ||
-          ""
-        }`
-      }`;
+      const caption = footerSetting?.grandTotal?.captionItem
+        ? footerSetting?.grandTotal?.captionItem
+        : "";
+
+      grandTotalRow.getCell(1).value = `${
+        footerSetting?.grandTotal?.caption || "GRAND TOTAL"
+      } ${GrandTotal} ${caption}`;
       grandTotalRow.getCell(1).alignment = { horizontal: "center" };
 
       (grandTotalCell as any).numFmt =
