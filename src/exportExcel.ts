@@ -99,7 +99,8 @@ const ExportExcel = async <T>({
           columnValue?.options?.halign
             ? columnValue?.options?.halign
             : columnValue?.options?.format === "RP" ||
-              columnValue?.options?.format === "GR"
+              columnValue?.options?.format === "GR" ||
+              columnValue?.options?.format === "NUMBER"
             ? "right"
             : "left" || "right"
         }`
@@ -134,7 +135,8 @@ const ExportExcel = async <T>({
             horizontal: column?.options?.halign
               ? column?.options?.halign
               : column?.options?.format === "RP" ||
-                column?.options?.format === "GR"
+                column?.options?.format === "GR" ||
+                column?.options?.format === "NUMBER"
               ? "right"
               : "left" || "right"
           };
@@ -170,7 +172,8 @@ const ExportExcel = async <T>({
       columns.forEach((column, columnIndex) => {
         if (
           column?.options?.format === "RP" ||
-          column?.options?.format === "GR"
+          column?.options?.format === "GR" ||
+          column?.options?.format === "NUMBER"
         ) {
           const startRow = 4; // Adjust this based on the starting row for your data
           const endRow = data.length + startRow - 1;
@@ -234,7 +237,8 @@ const ExportExcel = async <T>({
           horizontal: column?.options?.halign
             ? column?.options?.halign
             : column?.options?.format === "RP" ||
-              column?.options?.format === "GR"
+              column?.options?.format === "GR" ||
+              column?.options?.format === "NUMBER"
             ? "right"
             : "left" || "right"
         };
@@ -335,7 +339,11 @@ const ExportExcel = async <T>({
   const grandTotalRow = worksheet.addRow(columns.map(() => null)); // Create a row with null values
 
   columns.forEach((column, columnIndex) => {
-    if (column?.options?.format === "RP" || column?.options?.format === "GR") {
+    if (
+      column?.options?.format === "RP" ||
+      column?.options?.format === "GR" ||
+      column?.options?.format === "NUMBER"
+    ) {
       const startRow = 4; // Adjust this based on the starting row for your data
       const endRow = data.length + startRow - 1;
       const totalFormula = `SUM(${String.fromCharCode(
@@ -354,7 +362,8 @@ const ExportExcel = async <T>({
         ? footerSetting?.grandTotal?.captionItem
         : "";
 
-      grandTotalRow.getCell(1).value = `${
+      grandTotalRow.getCell(1).value = `
+      ${
         footerSetting?.grandTotal?.caption || "GRAND TOTAL"
       } ${GrandTotal} ${caption}`;
       grandTotalRow.getCell(1).alignment = { horizontal: "center" };

@@ -2,6 +2,7 @@ import { DataItemGenerator, GenaratorExport } from "./interface";
 import { convertDateTime } from "./helpers";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+
 const ExportPDF = <T>({
   columns,
   data,
@@ -56,7 +57,9 @@ const ExportPDF = <T>({
         fontStyle: "bold",
         halign: column?.options?.halign
           ? column?.options?.halign
-          : column?.options?.format === "RP" || column?.options?.format === "GR"
+          : column?.options?.format === "RP" ||
+            column?.options?.format === "GR" ||
+            column?.options?.format === "NUMBER"
           ? "right"
           : "left"
       }
@@ -96,6 +99,10 @@ const ExportPDF = <T>({
                   return list2[column.key] !== undefined
                     ? Number(list2[column.key] || 0).toFixed(3)
                     : "";
+                case "NUMBER":
+                  return list2[column.key] !== undefined
+                    ? Number(list2[column.key] || 0)
+                    : "";
                 case "DATETIME":
                   return list2[column.key] !== undefined
                     ? convertDateTime(list2[column.key] || new Date())
@@ -110,7 +117,8 @@ const ExportPDF = <T>({
               halign: column?.options?.halign
                 ? column?.options?.halign
                 : column?.options?.format === "RP" ||
-                  column?.options?.format === "GR"
+                  column?.options?.format === "GR" ||
+                  column?.options?.format === "NUMBER"
                 ? "right"
                 : typeof list2[column.key] === "number"
                 ? "right"
@@ -127,7 +135,8 @@ const ExportPDF = <T>({
         const total = subtotal[column.key as keyof DataItemGenerator];
         if (
           column?.options?.format === "RP" ||
-          column?.options?.format === "GR"
+          column?.options?.format === "GR" ||
+          column?.options?.format === "NUMBER"
         ) {
           const row = {
             content: column?.options?.disabledFooter
@@ -138,6 +147,8 @@ const ExportPDF = <T>({
                       return total.toLocaleString("kr-ko");
                     case "GR":
                       return total.toFixed(3);
+                    case "NUMBER":
+                      return total;
                     default:
                       return total.toString();
                   }
@@ -146,7 +157,8 @@ const ExportPDF = <T>({
               halign: column?.options?.halign
                 ? column?.options?.halign
                 : column?.options?.format === "RP" ||
-                  column?.options?.format === "GR"
+                  column?.options?.format === "GR" ||
+                  column?.options?.format === "NUMBER"
                 ? "right"
                 : "left",
               textColor: `#${pdfSetting?.txtColor || "000"}`,
@@ -217,6 +229,10 @@ const ExportPDF = <T>({
                       item[column.key as keyof DataItemGenerator] || 0
                     ).toFixed(3)
                   : "";
+              case "NUMBER":
+                return item[column.key as keyof DataItemGenerator] !== undefined
+                  ? Number(item[column.key as keyof DataItemGenerator] || 0)
+                  : "";
               case "DATETIME":
                 return item[column.key as keyof DataItemGenerator] !== undefined
                   ? convertDateTime(
@@ -233,7 +249,8 @@ const ExportPDF = <T>({
             halign: column?.options?.halign
               ? column?.options?.halign
               : column?.options?.format === "RP" ||
-                column?.options?.format === "GR"
+                column?.options?.format === "GR" ||
+                column?.options?.format === "NUMBER"
               ? "right"
               : typeof item[column.key as keyof DataItemGenerator] === "number"
               ? "right"
@@ -248,7 +265,11 @@ const ExportPDF = <T>({
   const grandTotal: any = [];
   columns.forEach((column) => {
     const total = totals[column.key as keyof DataItemGenerator];
-    if (column?.options?.format === "RP" || column?.options?.format === "GR") {
+    if (
+      column?.options?.format === "RP" ||
+      column?.options?.format === "GR" ||
+      column?.options?.format === "NUMBER"
+    ) {
       const row = {
         options: column?.options,
         content: column?.options?.disabledFooter
@@ -259,6 +280,8 @@ const ExportPDF = <T>({
                   return total.toLocaleString("kr-ko");
                 case "GR":
                   return total.toFixed(3);
+                case "NUMBER":
+                  return total;
                 default:
                   return total.toString();
               }
@@ -267,7 +290,8 @@ const ExportPDF = <T>({
           halign: column?.options?.halign
             ? column?.options?.halign
             : column?.options?.format === "RP" ||
-              column?.options?.format === "GR"
+              column?.options?.format === "GR" ||
+              column?.options?.format === "NUMBER"
             ? "right"
             : "left",
           textColor: `#${pdfSetting?.txtColor || "000"}`,
