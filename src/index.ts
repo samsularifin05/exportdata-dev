@@ -31,10 +31,9 @@ export const ExportData = <T>({
   footerSetting
 }: GenaratorExport<T>): void => {
   const databaru = {
-    data: txtSetting?.dataTxt?.length
-      ? txtSetting?.dataTxt
-      : [txtSetting?.dataTxt],
-    template: txtSetting?.templateTxt
+    data: [txtSetting?.dataTxt],
+    template: txtSetting?.templateTxt,
+    copy: txtSetting?.copy
   };
 
   if (data.length === 0) {

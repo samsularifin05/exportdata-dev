@@ -1,14 +1,17 @@
 interface Load {
   [key: string]: string | string[] | undefined;
 }
+
 interface Res {
   data: Load[];
   template: string;
+  copy?: boolean;
 }
+
 const generateNotaSlip = (res: Res): string[] => {
   const notaGenerated: string[] = [];
-
-  for (let index = 0; index < 1; index++) {
+  const jml = res.copy ? 2 : 1;
+  for (let index = 0; index < jml; index++) {
     const nota: string[] = res.data.map((load: Load) => {
       let replaceLoop = res.template;
 
@@ -79,9 +82,7 @@ const generateNotaSlip = (res: Res): string[] => {
       return replaceLoop
         .replace(/\{([a-z0-9_]+)\}/gm, (c) => {
           const key = c.replace(/(\{|\})/g, "");
-          if (key === "intenal_external") {
-            return index === 0 ? "Pelanggan" : "Internal";
-          }
+
           if (key.match(/auto_cut/)) {
             return "\nVA";
           }
@@ -89,7 +90,7 @@ const generateNotaSlip = (res: Res): string[] => {
         })
         .replace(/\n(\s)+\n/gm, "\n")
         .replace(/~new_line~/gm, "\n")
-        .replace(/!!LOOP\(detail_barang\)/g, "")
+        .replace(/!!LOOP\(detail\)/g, "")
         .replace(/[}{]/g, "");
     });
 
