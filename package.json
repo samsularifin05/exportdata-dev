@@ -1,6 +1,6 @@
 {
   "name": "exportdatafile",
-  "version": "1.0.16",
+  "version": "1.0.18",
   "main": "dist/index.js",
   "repository": "https://github.com/samsularifin05/exportdatafile",
   "description": "Export Data Excel Pdf and Txt",
@@ -11,9 +11,9 @@
     "txt",
     "jspdf",
     "exceljs",
-    "expprt data to pdf",
-    "expprt data to excel",
-    "expprt data to txt"
+    "export data to pdf",
+    "export data to excel",
+    "export data to txt"
   ],
   "files": [
     "dist/"
