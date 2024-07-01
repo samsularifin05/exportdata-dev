@@ -1,3 +1,6 @@
+import jsPDF from "jspdf";
+import ExcelJS from "exceljs";
+
 type FormatType = "RP" | "GR" | "DATETIME" | "NUMBER" | "";
 type HalignType = "center" | "right" | "left" | "";
 export interface ColumnGenarator<T> {
@@ -26,6 +29,12 @@ export interface DataItemGenerator {
 export type FileType = "EXCEL" | "PDF" | "TXT" | "ALL";
 
 export const validFileTypes: FileType[] = ["EXCEL", "PDF", "TXT", "ALL"];
+type CustomizePdfFunction = (
+  doc: jsPDF,
+  finalY: number,
+  autoTable?: any
+) => void;
+type CustomizeFunctionExcel = (worksheet: ExcelJS.Worksheet) => void;
 
 export interface GenaratorExport<T> {
   columns: ColumnGenarator<T>[];
@@ -42,6 +51,7 @@ export interface GenaratorExport<T> {
     bgColor?: string;
     titlePdf?: string;
     txtColor?: string;
+    finalY?: number;
     textHeaderRight?: string;
     textHeaderLeft?: string;
     theme?: "grid" | "striped" | "plain";
@@ -50,6 +60,7 @@ export interface GenaratorExport<T> {
       colSpan?: number;
     };
     openNewTab?: boolean;
+    customize?: CustomizePdfFunction;
   };
   date?: {
     start_date?: string;
@@ -71,6 +82,7 @@ export interface GenaratorExport<T> {
       disableGrandTotal?: boolean;
       colSpan?: number;
     };
+    customize?: CustomizeFunctionExcel;
   };
   grouping: string[];
   footerSetting?: {

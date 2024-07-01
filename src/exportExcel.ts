@@ -399,6 +399,10 @@ const ExportExcel = async <T>({
     };
   });
 
+  if (excelSetting?.customize) {
+    excelSetting.customize(worksheet);
+  }
+
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

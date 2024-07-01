@@ -45,6 +45,10 @@ const ExportPDF = <T>({
     title: title || pdfSetting?.titlePdf
   });
 
+  if (pdfSetting?.finalY) {
+    finalY = pdfSetting.finalY;
+  }
+
   // Header Tabel
   const tableHeader = columns.map((column) => {
     return {
@@ -392,6 +396,9 @@ const ExportPDF = <T>({
     doc.text(`${j} of ${pages}`, horizontalPos, verticalPos, {
       align: "center"
     });
+  }
+  if (typeof pdfSetting?.customize === "function") {
+    pdfSetting.customize(doc, finalY, autoTable);
   }
 
   if (pdfSetting?.openNewTab) {
