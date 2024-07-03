@@ -2,7 +2,7 @@ import ExportExcel from "./exportExcel";
 import ExportPDF from "./exportPdf";
 import ExportToTxt from "./exportTextFile";
 import { validateFileTypes } from "./helpers";
-import { GenaratorExport } from "./interface";
+import { GenaratorExport, ColumnGenarator } from "./interface";
 
 /**
  * Ekspor ke PDF atau Excel berdasarkan konfigurasi yang diberikan.
@@ -98,4 +98,4 @@ export const ExportData = <T>({
   });
 };
 
-export type { GenaratorExport };
+export type { ColumnGenarator };
