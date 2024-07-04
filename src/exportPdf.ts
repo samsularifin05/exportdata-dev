@@ -405,7 +405,7 @@ const ExportPDF = <T>({
     const blob = doc.output("bloburl");
     window.open(blob);
   } else {
-    doc.save(`${title || pdfSetting?.titlePdf}.pdf`);
+    doc.save(`${pdfSetting?.titlePdf || title}.pdf`);
   }
 };
 

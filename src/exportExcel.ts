@@ -409,7 +409,7 @@ const ExportExcel = async <T>({
   });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = `${title || excelSetting?.titleExcel}.xlsx`;
+  link.download = `${excelSetting?.titleExcel || title}.xlsx`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
