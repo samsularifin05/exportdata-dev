@@ -23,14 +23,15 @@ const ExportExcel = async <T>({
   const lastUsedColumnIndex = columns.length;
 
   // Judul
+  // console.log(lastUsedColumnIndex);
   const judul = worksheet.addRow([]);
   judul.getCell(1).value = title || excelSetting?.titleExcel;
   judul.getCell(1).alignment = { horizontal: "center" };
-  worksheet.mergeCells(
-    `A${judul.number}:${String.fromCharCode(64 + lastUsedColumnIndex)}${
-      judul.number
-    }`
-  );
+
+  const lastColumnLetter = worksheet.getColumn(lastUsedColumnIndex).letter;
+
+  worksheet.mergeCells(`A${judul.number}:${lastColumnLetter}${judul.number}`);
+
   judul.eachCell((cell) => {
     cell.font = {
       color: { argb: "000000" },
@@ -46,13 +47,10 @@ const ExportExcel = async <T>({
       date.caption ? date.caption : "Tanggal "
     } : ${date?.start_date} ${date?.end_date ? `s/d ${date?.end_date}` : ""}`;
     tanggalRow.getCell(1).alignment = { horizontal: "center" };
-
-    // Menggabungkan sel dari kolom A hingga kolom terakhir yang tidak terpakai pada baris tanggal
     worksheet.mergeCells(
-      `A${tanggalRow.number}:${String.fromCharCode(64 + lastUsedColumnIndex)}${
-        tanggalRow.number
-      }`
+      `A${tanggalRow.number}:${lastColumnLetter}${tanggalRow.number}`
     );
+
     tanggalRow.eachCell((cell) => {
       cell.font = {
         color: { argb: "00000" },
@@ -67,10 +65,9 @@ const ExportExcel = async <T>({
   additionalText.getCell(1).value = excelSetting?.additionalTextHeader || "";
   additionalText.getCell(1).alignment = { horizontal: "center" };
   worksheet.mergeCells(
-    `A${additionalText.number}:${String.fromCharCode(
-      64 + lastUsedColumnIndex
-    )}${additionalText.number}`
+    `A${additionalText.number}:${lastColumnLetter}${additionalText.number}`
   );
+
   additionalText.eachCell((cell) => {
     cell.font = { color: { argb: "000000" }, bold: true, size: 12 };
   });

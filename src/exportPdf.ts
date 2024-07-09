@@ -46,6 +46,7 @@ const ExportPDF = <T>({
   });
 
   if (pdfSetting?.finalY) {
+    console.log(pdfSetting.finalY);
     finalY = pdfSetting.finalY;
   }
 
@@ -245,7 +246,7 @@ const ExportPDF = <T>({
                   : "";
               default:
                 return item[column.key as keyof DataItemGenerator] !== undefined
-                  ? item[column.key as keyof DataItemGenerator].toString()
+                  ? item[column.key as keyof DataItemGenerator]?.toString()
                   : "";
             }
           })(),
