@@ -357,17 +357,19 @@ const ExportPDF = <T>({
     pdfSetting?.addRow(tableRows);
   }
 
-  tableRows.push([
-    {
-      content: `Print Date : ${convertDateTime(`${new Date()}`)}`,
-      colSpan: columns.length,
-      styles: {
-        textColor: `#${pdfSetting?.txtColor || "000"}`,
-        fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
-        fontStyle: "italic"
+  if (!pdfSetting?.disablePrintDate) {
+    tableRows.push([
+      {
+        content: `Print Date : ${convertDateTime(`${new Date()}`)}`,
+        colSpan: columns.length,
+        styles: {
+          textColor: `#${pdfSetting?.txtColor || "000"}`,
+          fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
+          fontStyle: "italic"
+        }
       }
-    }
-  ]);
+    ]);
+  }
 
   autoTable(doc, {
     head: [],

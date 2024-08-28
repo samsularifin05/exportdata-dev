@@ -63,6 +63,7 @@ export interface GenaratorExport<T> {
     openNewTab?: boolean;
     addRow?: addRowPdfPdfFunction;
     customize?: CustomizePdfFunction;
+    disablePrintDate?: boolean;
   };
   date?: {
     start_date?: string;
