@@ -353,6 +353,10 @@ const ExportPDF = <T>({
     tableRows.push(grandTotal);
   }
 
+  if (typeof pdfSetting?.addRow === "function") {
+    pdfSetting?.addRow(tableRows);
+  }
+
   tableRows.push([
     {
       content: `Print Date : ${convertDateTime(`${new Date()}`)}`,

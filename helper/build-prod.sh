@@ -1,4 +1,4 @@
-repoNameProduction="exportdata";
+repoNameProduction="exportdatafile";
 repoName="exportdata-dev";
 cd ../"$repoNameProduction" &&
 echo "Enter Name Branch : "

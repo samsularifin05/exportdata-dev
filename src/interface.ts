@@ -34,6 +34,7 @@ type CustomizePdfFunction = (
   finalY: number,
   autoTable?: any
 ) => void;
+type addRowPdfPdfFunction = (tableRows?: any) => void;
 type CustomizeFunctionExcel = (worksheet: ExcelJS.Worksheet) => void;
 
 export interface GenaratorExport<T> {
@@ -60,6 +61,7 @@ export interface GenaratorExport<T> {
       colSpan?: number;
     };
     openNewTab?: boolean;
+    addRow?: addRowPdfPdfFunction;
     customize?: CustomizePdfFunction;
   };
   date?: {
