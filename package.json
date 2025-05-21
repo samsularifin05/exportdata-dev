@@ -27,6 +27,7 @@
     "clean": true
   },
   "scripts": {
+    "build:dev": "tsup",
     "build": "tsup && sh ./helper/build-prod.sh",
     "update": "npm publish"
   },
@@ -34,11 +35,11 @@
   "license": "ISC",
   "dependencies": {
     "exceljs": "^4.4.0",
-    "jspdf": "^2.5.1",
-    "jspdf-autotable": "^3.8.1"
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2"
   },
   "devDependencies": {
-    "tsup": "^8.0.1",
+    "tsup": "^8.5.0",
     "typescript": "^5.3.3"
   }
 }
