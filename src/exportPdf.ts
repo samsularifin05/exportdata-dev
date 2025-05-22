@@ -1,5 +1,14 @@
-import { DataItemGenerator, GenaratorExport } from "./interface";
-import { convertDateTime } from "./helpers";
+import {
+  ColumnGenarator,
+  DataItemGenerator,
+  GenaratorExport
+} from "./interface";
+import {
+  convertDateTime,
+  countColumns,
+  formatingTitle,
+  getFlattenColumns
+} from "./helpers";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -51,71 +60,139 @@ const ExportPDF = <T>({
   }
 
   // Header Tabel
-  const tableHeader = columns.map((column) => {
-    return {
-      content: column.label,
-      key: column.key,
-      options: column?.options,
-      styles: {
-        textColor: `#${pdfSetting?.txtColor || "000"}`,
-        fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
-        fontStyle: "bold",
-        halign: column?.options?.halign
-          ? column?.options?.halign
-          : column?.options?.format === "RP" ||
-            column?.options?.format === "GR" ||
-            column?.options?.format === "NUMBER"
+  const headerRow1: any[] = [];
+  const headerRow2: any[] = [];
+  const hasChild = columns.some((col) => col.child && col.child.length > 0);
+  columns.forEach((column) => {
+    const baseStyle = {
+      textColor: `#${pdfSetting?.txtColor || "000"}`,
+      fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
+      fontStyle: "bold",
+      ...(column?.options?.valign ? { valign: column.options.valign } : {}),
+      halign:
+        column?.options?.halign ??
+        (["RP", "GR", "NUMBER"].includes(column?.options?.format || "")
           ? "right"
-          : "left"
-      }
+          : "left")
     };
+
+    if (hasChild) {
+      if (column.child && column.child.length > 0) {
+        // Parent di headerRow1
+        headerRow1.push({
+          content: column.label,
+          colSpan: column.child.length,
+          styles: baseStyle
+        });
+
+        // Children di headerRow2
+        column.child.forEach((childCol) => {
+          headerRow2.push({
+            content: childCol.label,
+            key: childCol.key,
+            options: childCol.options,
+            styles: {
+              ...baseStyle,
+              halign:
+                childCol?.options?.halign ??
+                (["RP", "GR", "NUMBER"].includes(
+                  childCol?.options?.format || ""
+                )
+                  ? "right"
+                  : "left")
+            }
+          });
+        });
+      } else {
+        // Tidak ada child, tapi harus isi 2 baris header (rowSpan 2)
+        headerRow1.push({
+          content: column.label,
+          rowSpan: 2,
+          key: column.key,
+          options: column.options,
+          styles: baseStyle
+        });
+      }
+    } else {
+      // Semua column tidak punya child, cukup 1 headerRow
+      headerRow1.push({
+        content: column.label,
+        key: column.key,
+        options: column.options,
+        styles: baseStyle
+      });
+    }
   });
 
-  tableRows.push(tableHeader);
+  // Push header ke tabel
+  tableRows.push(headerRow1);
+  if (hasChild && headerRow2.length > 0) {
+    tableRows.push(headerRow2);
+  }
 
   // Body Tabel
   const totals: { [key: string]: number } = {};
 
   data.forEach((item) => {
     if (grouping.length > 0) {
-      const group = grouping.map((column) => ({
-        content:
+      // Tambah row grup (header kelompok)
+      const totalColumns = countColumns(columns);
+
+      const groupContent = grouping
+        .map((column) =>
           item[column] !== undefined
-            ? `${formatingTitle(column)} : ` + item[column]
+            ? `${formatingTitle(column)} : ${item[column]}`
             : ""
-      }));
-      tableRows.push(group);
+        )
+        .filter(Boolean) // hilangkan string kosong
+        .join("  |  "); // separator antar grup (bisa diganti sesuai preferensi)
+
+      const groupRow = [
+        {
+          content: groupContent,
+          colSpan: totalColumns, // colSpan sesuai jumlah kolom tabel
+          styles: {
+            fontStyle: "bold",
+            halign: "left" // bisa disesuaikan
+          }
+        }
+      ];
+
+      tableRows.push(groupRow);
+
       const subtotal: { [key: string]: number } = {};
 
+      // FLATTEN COLUMNS untuk looping
+      const flatColumns = getFlattenColumns(columns);
+
       item.detail.forEach((list2: any) => {
-        const rowData = columns.map((column) => {
+        const rowData = flatColumns.map((column) => {
           const value = list2[column.key as keyof DataItemGenerator];
           const columnKey = column.key as keyof DataItemGenerator;
-          totals[columnKey] = (totals[columnKey] || 0) + Number(value);
-          subtotal[columnKey] = (subtotal[columnKey] || 0) + Number(value);
+
+          // Hitung subtotal & total
+          totals[columnKey] = (totals[columnKey] || 0) + Number(value || 0);
+          subtotal[columnKey] = (subtotal[columnKey] || 0) + Number(value || 0);
+
           return {
             content: (() => {
               switch (column?.options?.format) {
                 case "RP":
-                  return list2[column.key] !== undefined
-                    ? Number(list2[column.key] || 0).toLocaleString("kr-ko")
+                  return value !== undefined
+                    ? Number(value || 0).toLocaleString("kr-ko")
                     : "";
                 case "GR":
-                  return list2[column.key] !== undefined
-                    ? Number(list2[column.key] || 0).toFixed(3)
+                  return value !== undefined
+                    ? Number(value || 0).toFixed(3)
                     : "";
                 case "NUMBER":
-                  return list2[column.key] !== undefined
-                    ? Number(list2[column.key] || 0)
-                    : "";
+                  return value !== undefined ? Number(value || 0) : "";
                 case "DATETIME":
-                  return list2[column.key] !== undefined
-                    ? convertDateTime(list2[column.key] || new Date())
+                  return value !== undefined
+                    ? convertDateTime(value || new Date())
                     : "";
                 default:
-                  return list2[column.key] !== undefined
-                    ? list2[column.key].toString()
-                    : "";
+                  return value !== undefined ? value.toString() : "";
               }
             })(),
             styles: {
@@ -125,7 +202,7 @@ const ExportPDF = <T>({
                   column?.options?.format === "GR" ||
                   column?.options?.format === "NUMBER"
                 ? "right"
-                : typeof list2[column.key] === "number"
+                : typeof value === "number"
                 ? "right"
                 : "left"
             }
@@ -135,15 +212,17 @@ const ExportPDF = <T>({
         tableRows.push(rowData);
       });
 
+      // Footer Subtotal
       const footersubtotal: any = [];
-      columns.forEach((column) => {
+
+      flatColumns.forEach((column) => {
         const total = subtotal[column.key as keyof DataItemGenerator];
         if (
           column?.options?.format === "RP" ||
           column?.options?.format === "GR" ||
           column?.options?.format === "NUMBER"
         ) {
-          const row = {
+          footersubtotal.push({
             content: column?.options?.disabledFooter
               ? ""
               : (() => {
@@ -159,20 +238,12 @@ const ExportPDF = <T>({
                   }
                 })(),
             styles: {
-              halign: column?.options?.halign
-                ? column?.options?.halign
-                : column?.options?.format === "RP" ||
-                  column?.options?.format === "GR" ||
-                  column?.options?.format === "NUMBER"
-                ? "right"
-                : "left",
+              halign: column?.options?.halign || "right",
               textColor: `#${pdfSetting?.txtColor || "000"}`,
               fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
               fontStyle: "bold"
             }
-          };
-
-          footersubtotal.push(row);
+          });
         } else {
           footersubtotal.push({
             content: "",
@@ -184,6 +255,7 @@ const ExportPDF = <T>({
           });
         }
       });
+
       const colSpan = pdfSetting?.grandTotalSetting?.colSpan
         ? Number(pdfSetting?.grandTotalSetting?.colSpan || 0) + 1
         : 0;
@@ -197,11 +269,12 @@ const ExportPDF = <T>({
       const captionSub = footerSetting?.subTotal?.captionItem
         ? footerSetting?.subTotal?.captionItem
         : "";
+
       footersubtotal[0] = {
         content: `${
           footerSetting?.subTotal?.caption || "SUB TOTAL"
-        } ${subtotalCount} ${captionSub}`,
-        colSpan: colSpan,
+        }${subtotalCount} ${captionSub}`,
+        colSpan,
         styles: {
           textColor: `#${pdfSetting?.txtColor || "000"}`,
           fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
@@ -209,136 +282,137 @@ const ExportPDF = <T>({
           halign: "center"
         }
       };
+
       if (pdfSetting?.grandTotalSetting?.colSpan) {
         footersubtotal.splice(1, pdfSetting?.grandTotalSetting?.colSpan);
       }
+
       tableRows.push(footersubtotal);
     } else {
-      const rowData = columns.map((column) => {
+      // Helper untuk mengambil data cell dari item dan column
+      const getCellData = (column: ColumnGenarator<any>, item: any) => {
         const value = item[column.key as keyof DataItemGenerator];
         const columnKey = column.key as keyof DataItemGenerator;
-        totals[columnKey] = (totals[columnKey] || 0) + Number(value);
+
+        // Hitung total jika tidak disabled
+        if (!column.options?.disabledFooter) {
+          totals[columnKey] = (totals[columnKey] || 0) + Number(value || 0);
+        }
+
+        // Tentukan isi cell
+        const content = (() => {
+          switch (column?.options?.format) {
+            case "RP":
+              return value !== undefined
+                ? Number(value || 0).toLocaleString("kr-ko")
+                : "";
+            case "GR":
+              return value !== undefined ? Number(value || 0).toFixed(3) : "";
+            case "NUMBER":
+              return value !== undefined ? Number(value || 0) : "";
+            case "DATETIME":
+              return value !== undefined
+                ? convertDateTime(value || new Date())
+                : "";
+            default:
+              return value !== undefined ? value?.toString() : "";
+          }
+        })();
+
+        // Style cell
+        const halign = column?.options?.halign
+          ? column?.options?.halign
+          : column?.options?.format === "RP" ||
+            column?.options?.format === "GR" ||
+            column?.options?.format === "NUMBER"
+          ? "right"
+          : typeof value === "number"
+          ? "right"
+          : "left";
+
         return {
           options: column?.options,
-          content: (() => {
-            switch (column?.options?.format) {
-              case "RP":
-                return item[column.key as keyof DataItemGenerator] !== undefined
-                  ? Number(
-                      item[column.key as keyof DataItemGenerator] || 0
-                    ).toLocaleString("kr-ko")
-                  : "";
-              case "GR":
-                return item[column.key as keyof DataItemGenerator] !== undefined
-                  ? Number(
-                      item[column.key as keyof DataItemGenerator] || 0
-                    ).toFixed(3)
-                  : "";
-              case "NUMBER":
-                return item[column.key as keyof DataItemGenerator] !== undefined
-                  ? Number(item[column.key as keyof DataItemGenerator] || 0)
-                  : "";
-              case "DATETIME":
-                return item[column.key as keyof DataItemGenerator] !== undefined
-                  ? convertDateTime(
-                      item[column.key as keyof DataItemGenerator] || new Date()
-                    )
-                  : "";
-              default:
-                return item[column.key as keyof DataItemGenerator] !== undefined
-                  ? item[column.key as keyof DataItemGenerator]?.toString()
-                  : "";
-            }
-          })(),
-          styles: {
-            halign: column?.options?.halign
-              ? column?.options?.halign
-              : column?.options?.format === "RP" ||
-                column?.options?.format === "GR" ||
-                column?.options?.format === "NUMBER"
-              ? "right"
-              : typeof item[column.key as keyof DataItemGenerator] === "number"
-              ? "right"
-              : "left"
-          }
+          content,
+          styles: { halign }
         };
-      });
+      };
+
+      // Helper rekursif untuk flatten column dengan child
+
+      // Dapatkan semua kolom flatten dari struktur kolom dengan child
+      const flatColumns = getFlattenColumns(columns);
+
+      // Lalu generate rowData
+      const rowData = flatColumns.map((column) => getCellData(column, item));
+
+      // Tambahkan ke baris tabel
       tableRows.push(rowData);
     }
   });
 
-  const grandTotal: any = [];
-  columns.forEach((column) => {
-    const total = totals[column.key as keyof DataItemGenerator];
-    if (
-      column?.options?.format === "RP" ||
-      column?.options?.format === "GR" ||
-      column?.options?.format === "NUMBER"
-    ) {
-      const row = {
-        options: column?.options,
-        content: column?.options?.disabledFooter
-          ? ""
-          : (() => {
-              switch (column?.options?.format) {
-                case "RP":
-                  return total.toLocaleString("kr-ko");
-                case "GR":
-                  return total.toFixed(3);
-                case "NUMBER":
-                  return total;
-                default:
-                  return total.toString();
-              }
-            })(),
-        styles: {
-          halign: column?.options?.halign
-            ? column?.options?.halign
-            : column?.options?.format === "RP" ||
-              column?.options?.format === "GR" ||
-              column?.options?.format === "NUMBER"
-            ? "right"
-            : "left",
-          textColor: `#${pdfSetting?.txtColor || "000"}`,
-          fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
-          fontStyle: "bold"
-        }
-      };
+  const flatColumns = getFlattenColumns(columns);
+  const grandTotal: any[] = [];
 
-      grandTotal.push(row);
-    } else {
-      grandTotal.push({
-        content: "",
-        options: column?.options,
-        styles: {
-          textColor: `#${pdfSetting?.txtColor || "000"}`,
-          fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
-          fontStyle: "bold"
-        }
-      });
-    }
+  flatColumns.forEach((column) => {
+    const total = totals[column.key as keyof DataItemGenerator];
+
+    const isNumericFormat = ["RP", "GR", "NUMBER"].includes(
+      column?.options?.format || ""
+    );
+
+    const content = column?.options?.disabledFooter
+      ? ""
+      : (() => {
+          if (!isNumericFormat) return "";
+          switch (column.options?.format) {
+            case "RP":
+              return Number(total || 0).toLocaleString("kr-KO");
+            case "GR":
+              return Number(total || 0).toFixed(3);
+            case "NUMBER":
+              return Number(total || 0);
+            default:
+              return (total || 0).toString();
+          }
+        })();
+
+    grandTotal.push({
+      options: column?.options,
+      content,
+      styles: {
+        halign: column?.options?.halign
+          ? column.options.halign
+          : isNumericFormat
+          ? "right"
+          : "left",
+        textColor: `#${pdfSetting?.txtColor || "000"}`,
+        fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
+        fontStyle: "bold"
+      }
+    });
   });
 
-  const colSpan = pdfSetting?.grandTotalSetting?.colSpan
-    ? Number(pdfSetting?.grandTotalSetting?.colSpan || 0) + 1
-    : 0;
-
+  // Tangani caption dan colSpan untuk GRAND TOTAL
   if (!pdfSetting?.grandTotalSetting?.disableGrandTotal) {
-    const GrandTotal = footerSetting?.grandTotal?.enableCount
-      ? grouping.length > 0
-        ? " : " +
-          data.map((list) => list.detail.length).reduce((a, b) => a + b, 0)
-        : " : " + data.length
-      : "";
+    const rawColSpan = Number(pdfSetting?.grandTotalSetting?.colSpan || 0);
+    const colSpan = Math.min(rawColSpan + 1, flatColumns.length); // batasi agar tidak lebih dari kolom yang tersedia
 
-    const caption = footerSetting?.grandTotal?.captionItem
-      ? footerSetting?.grandTotal?.captionItem
-      : "";
+    const totalItemCount = footerSetting?.grandTotal?.enableCount
+      ? grouping.length > 0
+        ? data.reduce((sum, group) => sum + group.detail.length, 0)
+        : data.length
+      : 0;
+
+    const caption = footerSetting?.grandTotal?.captionItem || "";
+    const grandTotalLabel =
+      `${footerSetting?.grandTotal?.caption || "GRAND TOTAL"}` +
+      (totalItemCount ? ` : ${totalItemCount}` : "") +
+      (caption ? ` ${caption}` : "");
+
+    // Ubah cell pertama dengan content Grand Total + colSpan
     grandTotal[0] = {
-      content: `${
-        footerSetting?.grandTotal?.caption || "GRAND TOTAL"
-      } ${GrandTotal} ${caption}`,
-      colSpan: colSpan,
+      content: grandTotalLabel,
+      colSpan,
       styles: {
         textColor: `#${pdfSetting?.txtColor || "000"}`,
         fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
@@ -346,10 +420,23 @@ const ExportPDF = <T>({
         halign: "center"
       }
     };
-    if (pdfSetting?.grandTotalSetting?.colSpan) {
-      grandTotal.splice(1, pdfSetting?.grandTotalSetting?.colSpan);
+
+    // Hapus kolom setelah grandTotal[0] sebanyak colSpan - 1 agar panjang array tetap flatColumns.length
+    grandTotal.splice(1, colSpan - 1);
+
+    // Pastikan panjang array tetap sama dengan flatColumns.length
+    while (grandTotal.length < flatColumns.length) {
+      grandTotal.push({
+        content: "",
+        styles: {
+          textColor: `#${pdfSetting?.txtColor || "000"}`,
+          fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
+          fontStyle: "bold"
+        }
+      });
     }
 
+    // Push baris GRAND TOTAL ke table
     tableRows.push(grandTotal);
   }
 
@@ -358,10 +445,12 @@ const ExportPDF = <T>({
   }
 
   if (!pdfSetting?.disablePrintDate) {
+    const totalColumns = countColumns(columns);
+
     tableRows.push([
       {
         content: `Print Date : ${convertDateTime(`${new Date()}`)}`,
-        colSpan: columns.length,
+        colSpan: totalColumns,
         styles: {
           textColor: `#${pdfSetting?.txtColor || "000"}`,
           fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
@@ -416,15 +505,4 @@ const ExportPDF = <T>({
   }
 };
 
-const formatingTitle = (title: string): string => {
-  // Pisahkan kata-kata menggunakan underscore sebagai pemisah
-  const words = title.split("_");
-
-  // Ubah setiap kata menjadi huruf kapital dan gabungkan kembali dengan spasi di antara mereka
-  const formattedtitle = words
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-
-  return formattedtitle;
-};
 export default ExportPDF;

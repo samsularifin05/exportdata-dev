@@ -3,23 +3,19 @@ import ExcelJS from "exceljs";
 
 type FormatType = "RP" | "GR" | "DATETIME" | "NUMBER" | "";
 type HalignType = "center" | "right" | "left" | "";
+type ValignType = "top" | "middle" | "bottom" | undefined;
+
 export interface ColumnGenarator<T> {
   key: keyof T;
   label?: string;
   options?: {
     format?: FormatType;
-    // barcodeOption?: {
-    //   showText: boolean;
-    //   format: "qrcode" | "code128";
-    //   widthBarcode?: number;
-    //   heightBarcode?: number;
-    //   widthColumn?: number;
-    //   heightColumn?: number;
-    // };
     halign?: HalignType;
+    valign?: ValignType;
     disabledColumn?: boolean;
     disabledFooter?: boolean;
   };
+  child?: ColumnGenarator<T>[];
 }
 
 export interface DataItemGenerator {

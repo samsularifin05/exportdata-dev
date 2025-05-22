@@ -1,10 +1,11 @@
 // import BwipJs from "bwip-js/browser";
-import { convertDateTime } from "./helpers";
 import {
-  ColumnGenarator,
-  DataItemGenerator,
-  GenaratorExport
-} from "./interface";
+  convertDateTime,
+  countColumns,
+  formatingTitle,
+  getFlattenColumns
+} from "./helpers";
+import { DataItemGenerator, GenaratorExport } from "./interface";
 import ExcelJS from "exceljs";
 
 const ExportExcel = async <T>({
@@ -20,7 +21,7 @@ const ExportExcel = async <T>({
   columns = columns.filter((item) => !item.options?.disabledColumn);
   const worksheet = workbook.addWorksheet(title || excelSetting?.titleExcel);
 
-  const lastUsedColumnIndex = columns.length;
+  const lastUsedColumnIndex = countColumns(columns);
 
   // Judul
   // console.log(lastUsedColumnIndex);
@@ -72,38 +73,94 @@ const ExportExcel = async <T>({
     cell.font = { color: { argb: "000000" }, bold: true, size: 12 };
   });
 
-  // Menambahkan header ke worksheet
-  const headerColumn = worksheet.addRow(columns);
+  const hasChild = columns.some((col) => col.child && col.child.length > 0);
+  const headerColumn1 = worksheet.addRow([]);
+  const headerColumn2 = hasChild ? worksheet.addRow([]) : null;
 
-  // Menetapkan gaya untuk header
-  headerColumn.eachCell((cell) => {
-    cell.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: excelSetting?.bgColor || "#E8E5E5" }, // Warna hijau yang diinginkan
-      bgColor: { argb: excelSetting?.bgColor || "#E8E5E5" }
-    };
-    cell.font = {
-      color: { argb: excelSetting?.txtColor },
-      bold: true
-    };
+  columns.forEach((col) => {
+    if (col.child && col.child.length > 0) {
+      // Parent dengan child: di headerColumn1 ditulis parent-nya dan di headerColumn2 tulis child-nya
+      // Merge parent cell di headerColumn1 sesuai jumlah child
+      const startCol = headerColumn1.actualCellCount + 1;
+      const childCount = col.child.length;
 
-    const columnValue = cell.value as unknown as ColumnGenarator<T>;
+      // Isi parent di headerColumn1, merge sesuai childCount
+      headerColumn1.getCell(startCol).value = col.label;
+      if (childCount > 1) {
+        worksheet.mergeCells(
+          headerColumn1.number,
+          startCol,
+          headerColumn1.number,
+          startCol + childCount - 1
+        );
+      }
 
-    if (cell.value) {
-      cell.alignment = {
-        horizontal: `${
-          columnValue?.options?.halign
-            ? columnValue?.options?.halign
-            : columnValue?.options?.format === "RP" ||
-              columnValue?.options?.format === "GR" ||
-              columnValue?.options?.format === "NUMBER"
-            ? "right"
-            : "left" || "right"
-        }`
+      // Styling dan alignment parent headerColumn1
+      for (let i = startCol; i < startCol + childCount; i++) {
+        const cell = headerColumn1.getCell(i);
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: excelSetting?.bgColor || "E8E5E5" }
+        };
+        cell.font = {
+          color: { argb: excelSetting?.txtColor || "000000" },
+          bold: true
+        };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+      }
+
+      // Isi child di headerColumn2
+      col.child.forEach((childCol, index) => {
+        if (headerColumn2) {
+          const cell = headerColumn2.getCell(startCol + index);
+          cell.value = childCol.label;
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: excelSetting?.bgColor || "E8E5E5" }
+          };
+          cell.font = {
+            color: { argb: excelSetting?.txtColor || "000000" },
+            bold: true
+          };
+
+          const halign =
+            childCol.options?.halign ||
+            (["RP", "GR", "NUMBER"].includes(childCol?.options?.format || "")
+              ? "right"
+              : "left");
+          const valign = childCol.options?.valign || "middle";
+          cell.alignment = { horizontal: halign, vertical: valign };
+        }
+      });
+    } else {
+      // Parent tanpa child: tulis di headerColumn1 dan merge di headerColumn2 agar melebar ke bawah
+      const colIndex = headerColumn1.actualCellCount + 1;
+
+      // Isi headerColumn1
+      headerColumn1.getCell(colIndex).value = col.label;
+      headerColumn1.getCell(colIndex).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: excelSetting?.bgColor || "E8E5E5" }
       };
-
-      cell.value = columnValue.label;
+      headerColumn1.getCell(colIndex).font = {
+        color: { argb: excelSetting?.txtColor || "000000" },
+        bold: true
+      };
+      headerColumn1.getCell(colIndex).alignment = {
+        horizontal: col.options?.halign || "center",
+        vertical: col.options?.valign || "middle"
+      };
+      if (hasChild && headerColumn2) {
+        worksheet.mergeCells(
+          headerColumn1.number,
+          colIndex,
+          headerColumn2.number,
+          colIndex
+        );
+      }
     }
   });
 
@@ -111,17 +168,33 @@ const ExportExcel = async <T>({
 
   data.forEach((item) => {
     if (grouping.length > 0) {
-      const group = grouping.map((column) => ({
-        value:
+      const totalColumns = countColumns(columns); // sudah kamu punya
+      const groupContent = grouping
+        .map((column) =>
           item[column] !== undefined
-            ? `${formatingTitle(column)} : ` + item[column]
+            ? `${formatingTitle(column)} : ${item[column]}`
             : ""
-      }));
-      worksheet.addRow(group.map((cellData) => cellData.value));
+        )
+        .filter(Boolean)
+        .join("  |  ");
+
+      const groupRow = worksheet.addRow([groupContent]); // hanya isi satu sel (di kolom A)
+      worksheet.mergeCells(
+        `A${groupRow.number}:${String.fromCharCode(64 + totalColumns)}${
+          groupRow.number
+        }`
+      );
+
+      // Styling opsional:
+      groupRow.getCell(1).alignment = { horizontal: "left" };
+      groupRow.getCell(1).font = { bold: true };
+
       const subtotal: { [key: string]: number } = {};
 
       item.detail.forEach((itemDetail: any) => {
-        const rowData = columns.map((column) => {
+        const flatColumns = getFlattenColumns(columns);
+
+        const rowData = flatColumns.map((column) => {
           const value =
             column?.options?.format === "DATETIME"
               ? convertDateTime(
@@ -135,7 +208,7 @@ const ExportExcel = async <T>({
                 column?.options?.format === "GR" ||
                 column?.options?.format === "NUMBER"
               ? "right"
-              : "left" || "right"
+              : "left"
           };
           const columnKey = column.key as keyof DataItemGenerator;
           totals[columnKey] = (totals[columnKey] || 0) + Number(value);
@@ -164,9 +237,11 @@ const ExportExcel = async <T>({
           }
         });
       });
+      const flatColumnsSubTott = getFlattenColumns(columns);
+
       const subtotalRow = worksheet.addRow(columns.map(() => null)); // Create a row with null values
 
-      columns.forEach((column, columnIndex) => {
+      flatColumnsSubTott.forEach((column, columnIndex) => {
         if (
           column?.options?.format === "RP" ||
           column?.options?.format === "GR" ||
@@ -224,7 +299,8 @@ const ExportExcel = async <T>({
         };
       });
     } else {
-      const rowData = columns.map((column) => {
+      const flatColumns = getFlattenColumns(columns);
+      const rowData = flatColumns.map((column) => {
         const value =
           column?.options?.format === "DATETIME"
             ? convertDateTime(item[column.key as keyof DataItemGenerator])
@@ -237,7 +313,7 @@ const ExportExcel = async <T>({
               column?.options?.format === "GR" ||
               column?.options?.format === "NUMBER"
             ? "right"
-            : "left" || "right"
+            : "left"
         };
 
         const columnKey = column.key as keyof DataItemGenerator;
@@ -263,47 +339,6 @@ const ExportExcel = async <T>({
       rowData.forEach((cellData, index) => {
         const cell = row.getCell(index + 1);
 
-        // console.log(cellData.options?.showTextBarcode);
-
-        // const barcodeOption = cellData.options?.barcodeOption;
-        // if (barcodeOption !== undefined) {
-        //   // console.log(worksheet.getColumn("A4").number);
-        //   const canvas = document.createElement("canvas");
-        //   BwipJs.toCanvas(canvas, {
-        //     bcid: barcodeOption.format || "code128", // Barcode type
-        //     text: String(cellData.value), // Text to encode
-        //     scale: 3, // 3x scaling factor
-        //     height: 10, // Bar height, in millimeters
-        //     includetext: barcodeOption.showText || true, // Show human-readable text
-        //     textxalign: "center",
-        //   });
-
-        //   const imageId = cell.workbook.addImage({
-        //     base64: canvas.toDataURL("image/png"),
-        //     extension: "png",
-        //   });
-
-        //   row.height = barcodeOption.heightColumn || 39;
-        //   const firstColumn = worksheet.getColumn(index + 1);
-        //   firstColumn.width = barcodeOption.widthColumn || 12;
-
-        //   worksheet.addImage(imageId, {
-        //     tl: {
-        //       col: index + 1 - 1,
-        //       row: Number(cell.row || 0) - 1,
-        //     }, // Gunakan nomor baris yang benar
-        //     ext: {
-        //       width: barcodeOption.widthBarcode || 100,
-        //       height: barcodeOption.heightBarcode || 50,
-        //     }, // Sesuaikan dengan ukuran gambar Anda
-        //   });
-
-        //   cell.alignment = { horizontal: "center" };
-
-        //   cell.value = "";
-        //   // Tidak perlu mengembalikan nilai untuk kolom gambar barcode
-        //   return null;
-        // }
         const vertical = cellData.alignment.vertical
           ? String(cellData.alignment.vertical || "bottom")
           : "bottom";
@@ -335,7 +370,9 @@ const ExportExcel = async <T>({
 
   const grandTotalRow = worksheet.addRow(columns.map(() => null)); // Create a row with null values
 
-  columns.forEach((column, columnIndex) => {
+  const flatColumnsTott = getFlattenColumns(columns);
+
+  flatColumnsTott.forEach((column, columnIndex) => {
     if (
       column?.options?.format === "RP" ||
       column?.options?.format === "GR" ||
@@ -413,15 +450,3 @@ const ExportExcel = async <T>({
 };
 
 export default ExportExcel;
-
-const formatingTitle = (title: string): string => {
-  // Pisahkan kata-kata menggunakan underscore sebagai pemisah
-  const words = title.split("_");
-
-  // Ubah setiap kata menjadi huruf kapital dan gabungkan kembali dengan spasi di antara mereka
-  const formattedtitle = words
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-
-  return formattedtitle;
-};
