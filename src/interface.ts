@@ -89,11 +89,13 @@ export interface GenaratorExport<T> {
       caption?: string;
       enableCount?: boolean;
       captionItem?: string;
+      disableSubtotal?: boolean;
     };
     grandTotal?: {
       caption?: string;
       captionItem?: string;
       enableCount?: boolean;
+      disableGrandTotal?: boolean;
     };
   };
 }

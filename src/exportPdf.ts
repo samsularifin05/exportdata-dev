@@ -217,81 +217,85 @@ const ExportPDF = <T>({
         tableRows.push(rowData);
       });
 
-      // Footer Subtotal
-      const footersubtotal: any = [];
-      flatColumns.forEach((column) => {
-        const total = subtotal[column.key as keyof DataItemGenerator];
-        if (
-          column?.options?.format === "RP" ||
-          column?.options?.format === "GR" ||
-          column?.options?.format === "NUMBER"
-        ) {
-          footersubtotal.push({
-            content: column?.options?.disabledFooter
-              ? ""
-              : (() => {
-                switch (column?.options?.format) {
-                  case "RP":
-                    return total.toLocaleString("kr-ko");
-                  case "GR":
-                    return total.toFixed(3);
-                  case "NUMBER":
-                    return total;
-                  default:
-                    return total.toString();
-                }
-              })(),
-            styles: {
-              halign: column?.options?.halign || "right",
-              textColor: `#${pdfSetting?.txtColor || "000"}`,
-              fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
-              fontStyle: "bold",
-            },
-          });
-        } else {
-          footersubtotal.push({
-            content: "",
-            styles: {
-              textColor: `#${pdfSetting?.txtColor || "000"}`,
-              fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
-              fontStyle: "bold",
-            },
-          });
+
+      if (!footerSetting?.subTotal?.disableSubtotal) {
+
+        // Footer Subtotal
+        const footersubtotal: any = [];
+        flatColumns.forEach((column) => {
+          const total = subtotal[column.key as keyof DataItemGenerator];
+          if (
+            column?.options?.format === "RP" ||
+            column?.options?.format === "GR" ||
+            column?.options?.format === "NUMBER"
+          ) {
+            footersubtotal.push({
+              content: column?.options?.disabledFooter
+                ? ""
+                : (() => {
+                  switch (column?.options?.format) {
+                    case "RP":
+                      return total.toLocaleString("kr-ko");
+                    case "GR":
+                      return total.toFixed(3);
+                    case "NUMBER":
+                      return total;
+                    default:
+                      return total.toString();
+                  }
+                })(),
+              styles: {
+                halign: column?.options?.halign || "right",
+                textColor: `#${pdfSetting?.txtColor || "000"}`,
+                fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
+                fontStyle: "bold",
+              },
+            });
+          } else {
+            footersubtotal.push({
+              content: "",
+              styles: {
+                textColor: `#${pdfSetting?.txtColor || "000"}`,
+                fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
+                fontStyle: "bold",
+              },
+            });
+          }
+
+
+        });
+
+        const colSpan = pdfSetting?.grandTotalSetting?.colSpan
+          ? Number(pdfSetting?.grandTotalSetting?.colSpan || 0) + 1
+          : 0;
+
+        const subtotalCount = footerSetting?.subTotal?.enableCount
+          ? grouping.length > 0
+            ? " : " + item.detail.length
+            : ""
+          : "";
+
+        const captionSub = footerSetting?.subTotal?.captionItem
+          ? footerSetting?.subTotal?.captionItem
+          : "";
+
+        footersubtotal[0] = {
+          content: `${footerSetting?.subTotal?.caption || "SUB TOTAL"}${subtotalCount} ${captionSub}`,
+          colSpan,
+          styles: {
+            textColor: `#${pdfSetting?.txtColor || "000"}`,
+            fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
+            fontStyle: "bold",
+            halign: "center",
+          },
+        };
+
+        if (pdfSetting?.grandTotalSetting?.colSpan) {
+          footersubtotal.splice(1, pdfSetting?.grandTotalSetting?.colSpan);
         }
 
-
-      });
-
-      const colSpan = pdfSetting?.grandTotalSetting?.colSpan
-        ? Number(pdfSetting?.grandTotalSetting?.colSpan || 0) + 1
-        : 0;
-
-      const subtotalCount = footerSetting?.subTotal?.enableCount
-        ? grouping.length > 0
-          ? " : " + item.detail.length
-          : ""
-        : "";
-
-      const captionSub = footerSetting?.subTotal?.captionItem
-        ? footerSetting?.subTotal?.captionItem
-        : "";
-
-      footersubtotal[0] = {
-        content: `${footerSetting?.subTotal?.caption || "SUB TOTAL"}${subtotalCount} ${captionSub}`,
-        colSpan,
-        styles: {
-          textColor: `#${pdfSetting?.txtColor || "000"}`,
-          fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
-          fontStyle: "bold",
-          halign: "center",
-        },
-      };
-
-      if (pdfSetting?.grandTotalSetting?.colSpan) {
-        footersubtotal.splice(1, pdfSetting?.grandTotalSetting?.colSpan);
+        tableRows.push(footersubtotal);
       }
-
-      tableRows.push(footersubtotal);
     } else {
       // Helper untuk mengambil data cell dari item dan column
       const getCellData = (column: ColumnGenarator<any>, item: any) => {
@@ -361,49 +365,48 @@ const ExportPDF = <T>({
   });
 
   const flatColumns = getFlattenColumns(columns);
-  const grandTotal: any[] = [];
+  if (!footerSetting?.grandTotal?.disableGrandTotal) {
+    const grandTotal: any[] = [];
 
-  flatColumns.forEach((column) => {
-    const total = totals[column.key as keyof DataItemGenerator];
+    flatColumns.forEach((column) => {
+      const total = totals[column.key as keyof DataItemGenerator];
 
-    const isNumericFormat = ["RP", "GR", "NUMBER"].includes(
-      column?.options?.format || ""
-    );
+      const isNumericFormat = ["RP", "GR", "NUMBER"].includes(
+        column?.options?.format || ""
+      );
 
-    const content = column?.options?.disabledFooter
-      ? ""
-      : (() => {
-        if (!isNumericFormat) return "";
-        switch (column.options?.format) {
-          case "RP":
-            return Number(total || 0).toLocaleString("kr-KO");
-          case "GR":
-            return Number(total || 0).toFixed(3);
-          case "NUMBER":
-            return Number(total || 0);
-          default:
-            return (total || 0).toString();
-        }
-      })();
+      const content = column?.options?.disabledFooter
+        ? ""
+        : (() => {
+          if (!isNumericFormat) return "";
+          switch (column.options?.format) {
+            case "RP":
+              return Number(total || 0).toLocaleString("kr-KO");
+            case "GR":
+              return Number(total || 0).toFixed(3);
+            case "NUMBER":
+              return Number(total || 0);
+            default:
+              return (total || 0).toString();
+          }
+        })();
 
-    grandTotal.push({
-      options: column?.options,
-      content,
-      styles: {
-        halign: column?.options?.halign
-          ? column.options.halign
-          : isNumericFormat
-            ? "right"
-            : "left",
-        textColor: `#${pdfSetting?.txtColor || "000"}`,
-        fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
-        fontStyle: "bold",
-      },
+      grandTotal.push({
+        options: column?.options,
+        content,
+        styles: {
+          halign: column?.options?.halign
+            ? column.options.halign
+            : isNumericFormat
+              ? "right"
+              : "left",
+          textColor: `#${pdfSetting?.txtColor || "000"}`,
+          fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
+          fontStyle: "bold",
+        },
+      });
     });
-  });
-
-  // Tangani caption dan colSpan untuk GRAND TOTAL
-  if (!pdfSetting?.grandTotalSetting?.disableGrandTotal) {
+    // Tangani caption dan colSpan untuk GRAND TOTAL
     const rawColSpan = Number(pdfSetting?.grandTotalSetting?.colSpan || 0);
     const colSpan = Math.min(rawColSpan + 1, flatColumns.length); // batasi agar tidak lebih dari kolom yang tersedia
 
@@ -547,6 +550,5 @@ const ExportPDF = <T>({
     doc.save(`${pdfSetting?.titlePdf || title}.pdf`);
   }
 };
-
 
 export default ExportPDF;

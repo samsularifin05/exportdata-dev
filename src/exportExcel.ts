@@ -284,64 +284,69 @@ const ExportExcel = async <T>({
       });
       const flatColumnsSubTott = getFlattenColumns(columns);
 
-      const subtotalRow = worksheet.addRow(columns.map(() => null)); // Create a row with null values
+      if (!footerSetting?.subTotal?.disableSubtotal) {
+        const subtotalRow = worksheet.addRow(columns.map(() => null)); // Create a row with null values
 
-      flatColumnsSubTott.forEach((column, columnIndex) => {
-        if (
-          column?.options?.format === "RP" ||
-          column?.options?.format === "GR" ||
-          column?.options?.format === "NUMBER"
-        ) {
-          const startRow = 4; // Adjust this based on the starting row for your data
-          const endRow = data.length + startRow - 1;
-          const totalFormula = `SUM(${String.fromCharCode(
-            65 + columnIndex
-          )}${startRow}:${String.fromCharCode(65 + columnIndex)}${endRow})`;
-          const grandTotalCell = subtotalRow.getCell(columnIndex + 1);
-          const subtotalCount = footerSetting?.subTotal?.enableCount
-            ? grouping.length > 0
-              ? " : " + item.detail.length
-              : ""
-            : "";
+        flatColumnsSubTott.forEach((column, columnIndex) => {
+          if (
+            column?.options?.format === "RP" ||
+            column?.options?.format === "GR" ||
+            column?.options?.format === "NUMBER"
+          ) {
+            const startRow = 4; // Adjust this based on the starting row for your data
+            const endRow = data.length + startRow - 1;
+            const totalFormula = `SUM(${String.fromCharCode(
+              65 + columnIndex
+            )}${startRow}:${String.fromCharCode(65 + columnIndex)}${endRow})`;
+            const grandTotalCell = subtotalRow.getCell(columnIndex + 1);
+            const subtotalCount = footerSetting?.subTotal?.enableCount
+              ? grouping.length > 0
+                ? " : " + item.detail.length
+                : ""
+              : "";
 
-          const captionSub = footerSetting?.subTotal?.captionItem
-            ? footerSetting?.subTotal?.captionItem
-            : "";
-          (subtotalRow.getCell(1).value =
-            `${footerSetting?.subTotal?.caption || "SUB TOTAL"} ${subtotalCount} ${captionSub}`),
-            (subtotalRow.getCell(1).alignment = { horizontal: "center" });
+            const captionSub = footerSetting?.subTotal?.captionItem
+              ? footerSetting?.subTotal?.captionItem
+              : "";
+            (subtotalRow.getCell(1).value =
+              `${footerSetting?.subTotal?.caption || "SUB TOTAL"} ${subtotalCount} ${captionSub}`),
+              (subtotalRow.getCell(1).alignment = { horizontal: "center" });
 
-          // Explicitly cast the cell to CellValue to set numFmt
-          (grandTotalCell as any).numFmt =
-            column?.options?.format === "GR" ? "#,##0.000" : "#,##0";
-          grandTotalCell.value = { formula: totalFormula };
-          subtotalRow.getCell(columnIndex + 1).value = column?.options
-            .disabledFooter
-            ? ""
-            : subtotal[column.key as keyof DataItemGenerator];
-        } else {
-          subtotalRow.getCell(columnIndex + 1).value = "";
+            // Explicitly cast the cell to CellValue to set numFmt
+            (grandTotalCell as any).numFmt =
+              column?.options?.format === "GR" ? "#,##0.000" : "#,##0";
+            grandTotalCell.value = { formula: totalFormula };
+            subtotalRow.getCell(columnIndex + 1).value = column?.options
+              .disabledFooter
+              ? ""
+              : subtotal[column.key as keyof DataItemGenerator];
+          } else {
+            subtotalRow.getCell(columnIndex + 1).value = "";
+          }
+        });
+
+
+        if (excelSetting?.grandTotalSetting?.colSpan) {
+          worksheet.mergeCells(
+            `A${subtotalRow.number}:${String.fromCharCode(
+              64 + Number(excelSetting?.grandTotalSetting?.colSpan)
+            )}${subtotalRow.number}`
+          );
         }
-      });
-      if (excelSetting?.grandTotalSetting?.colSpan) {
-        worksheet.mergeCells(
-          `A${subtotalRow.number}:${String.fromCharCode(
-            64 + Number(excelSetting?.grandTotalSetting?.colSpan)
-          )}${subtotalRow.number}`
-        );
+        subtotalRow.eachCell((cell) => {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: excelSetting?.bgColor || "#E8E5E5" }, // Warna hijau yang diinginkan
+            bgColor: { argb: excelSetting?.bgColor || "#E8E5E5" },
+          };
+          cell.font = {
+            color: { argb: excelSetting?.txtColor },
+            bold: true,
+          };
+        });
       }
-      subtotalRow.eachCell((cell) => {
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: excelSetting?.bgColor || "#E8E5E5" }, // Warna hijau yang diinginkan
-          bgColor: { argb: excelSetting?.bgColor || "#E8E5E5" },
-        };
-        cell.font = {
-          color: { argb: excelSetting?.txtColor },
-          bold: true,
-        };
-      });
+
     } else {
       const flatColumns = getFlattenColumns(columns);
 
@@ -442,64 +447,71 @@ const ExportExcel = async <T>({
 
   const flatColumnsTott = getFlattenColumns(columns);
 
-  flatColumnsTott.forEach((column, columnIndex) => {
-    if (
-      column?.options?.format === "RP" ||
-      column?.options?.format === "GR" ||
-      column?.options?.format === "NUMBER"
-    ) {
-      const startRow = 4; // Adjust this based on the starting row for your data
-      const endRow = data.length + startRow - 1;
-      const totalFormula = `SUM(${String.fromCharCode(
-        65 + columnIndex
-      )}${startRow}:${String.fromCharCode(65 + columnIndex)}${endRow})`;
-      const grandTotalCell = grandTotalRow.getCell(columnIndex + 1);
-      // content: ,
-      const GrandTotal = footerSetting?.grandTotal?.enableCount
-        ? grouping.length > 0
-          ? " : " +
-          data.map((list) => list.detail.length).reduce((a, b) => a + b, 0)
-          : " : " + data.length
-        : "";
+  if (!footerSetting?.grandTotal?.disableGrandTotal) {
 
-      const caption = footerSetting?.grandTotal?.captionItem
-        ? footerSetting?.grandTotal?.captionItem
-        : "";
+    flatColumnsTott.forEach((column, columnIndex) => {
+      if (
+        column?.options?.format === "RP" ||
+        column?.options?.format === "GR" ||
+        column?.options?.format === "NUMBER"
+      ) {
 
-      const footerGrandtotal = `${footerSetting?.grandTotal?.caption || "GRAND TOTAL"} ${GrandTotal} ${caption}`;
-      grandTotalRow.getCell(1).value = footerGrandtotal;
-      grandTotalRow.getCell(1).alignment = { horizontal: "center" };
+        const startRow = 4; // Adjust this based on the starting row for your data
+        const endRow = data.length + startRow - 1;
+        const totalFormula = `SUM(${String.fromCharCode(
+          65 + columnIndex
+        )}${startRow}:${String.fromCharCode(65 + columnIndex)}${endRow})`;
+        const grandTotalCell = grandTotalRow.getCell(columnIndex + 1);
+        // content: ,
+        const GrandTotal = footerSetting?.grandTotal?.enableCount
+          ? grouping.length > 0
+            ? " : " +
+            data.map((list) => list.detail.length).reduce((a, b) => a + b, 0)
+            : " : " + data.length
+          : "";
 
-      (grandTotalCell as any).numFmt =
-        column?.options?.format === "GR" ? "#,##0.000" : "#,##0";
-      grandTotalCell.value = { formula: totalFormula };
-      grandTotalRow.getCell(columnIndex + 1).value = column?.options
-        .disabledFooter
-        ? ""
-        : totals[column.key as keyof DataItemGenerator];
-    } else {
-      grandTotalRow.getCell(columnIndex + 1).value = "";
+        const caption = footerSetting?.grandTotal?.captionItem
+          ? footerSetting?.grandTotal?.captionItem
+          : "";
+
+        const footerGrandtotal = `${footerSetting?.grandTotal?.caption || "GRAND TOTAL"} ${GrandTotal} ${caption}`;
+        grandTotalRow.getCell(1).value = footerGrandtotal;
+        grandTotalRow.getCell(1).alignment = { horizontal: "center" };
+
+
+        (grandTotalCell as any).numFmt =
+          column?.options?.format === "GR" ? "#,##0.000" : "#,##0";
+        grandTotalCell.value = { formula: totalFormula };
+        grandTotalRow.getCell(columnIndex + 1).value = column?.options
+          .disabledFooter
+          ? ""
+          : totals[column.key as keyof DataItemGenerator];
+      } else {
+        grandTotalRow.getCell(columnIndex + 1).value = "";
+      }
+    });
+
+    if (excelSetting?.grandTotalSetting?.colSpan) {
+      worksheet.mergeCells(
+        `A${grandTotalRow.number}:${String.fromCharCode(
+          64 + Number(excelSetting?.grandTotalSetting?.colSpan)
+        )}${grandTotalRow.number}`
+      );
     }
-  });
-  if (excelSetting?.grandTotalSetting?.colSpan) {
-    worksheet.mergeCells(
-      `A${grandTotalRow.number}:${String.fromCharCode(
-        64 + Number(excelSetting?.grandTotalSetting?.colSpan)
-      )}${grandTotalRow.number}`
-    );
+    grandTotalRow.eachCell((cell) => {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: excelSetting?.bgColor || "#E8E5E5" }, // Warna hijau yang diinginkan
+        bgColor: { argb: excelSetting?.bgColor || "#E8E5E5" },
+      };
+      cell.font = {
+        color: { argb: excelSetting?.txtColor },
+        bold: true,
+      };
+    });
   }
-  grandTotalRow.eachCell((cell) => {
-    cell.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: excelSetting?.bgColor || "#E8E5E5" }, // Warna hijau yang diinginkan
-      bgColor: { argb: excelSetting?.bgColor || "#E8E5E5" },
-    };
-    cell.font = {
-      color: { argb: excelSetting?.txtColor },
-      bold: true,
-    };
-  });
+
 
   if (excelSetting?.customize) {
     excelSetting.customize(worksheet);
