@@ -19,11 +19,11 @@ const ExportPDF = <T>({
   pdfSetting,
   date,
   title,
-  footerSetting
+  footerSetting,
 }: GenaratorExport<T>): void => {
   const doc: jsPDF = new jsPDF(pdfSetting?.orientation, pdfSetting?.unit, [
     pdfSetting?.width || 297,
-    pdfSetting?.height || 210
+    pdfSetting?.height || 210,
   ]);
   let tableRows: any[] = [];
   let finalY = date ? 30 : 20;
@@ -37,13 +37,12 @@ const ExportPDF = <T>({
 
   //Text Kanan
   doc.text(`${title || pdfSetting?.titlePdf}`, widthPortrait - 15, 18, {
-    align: "right"
+    align: "right",
   });
 
   if (date) {
     doc.text(
-      `${date.caption ? date.caption : "TANGGAL "} : ${date?.start_date} ${
-        date?.end_date ? `s/d ${date?.end_date}` : ""
+      `${date.caption ? date.caption : "TANGGAL "} : ${date?.start_date} ${date?.end_date ? `s/d ${date?.end_date}` : ""
       }`,
       widthPortrait - 15,
       22,
@@ -51,7 +50,7 @@ const ExportPDF = <T>({
     );
   }
   doc.setProperties({
-    title: title || pdfSetting?.titlePdf
+    title: title || pdfSetting?.titlePdf,
   });
 
   if (pdfSetting?.finalY) {
@@ -73,7 +72,7 @@ const ExportPDF = <T>({
         column?.options?.halign ??
         (["RP", "GR", "NUMBER"].includes(column?.options?.format || "")
           ? "right"
-          : "left")
+          : "left"),
     };
 
     if (hasChild) {
@@ -82,7 +81,7 @@ const ExportPDF = <T>({
         headerRow1.push({
           content: column.label,
           colSpan: column.child.length,
-          styles: baseStyle
+          styles: baseStyle,
         });
 
         // Children di headerRow2
@@ -99,8 +98,8 @@ const ExportPDF = <T>({
                   childCol?.options?.format || ""
                 )
                   ? "right"
-                  : "left")
-            }
+                  : "left"),
+            },
           });
         });
       } else {
@@ -110,7 +109,7 @@ const ExportPDF = <T>({
           rowSpan: 2,
           key: column.key,
           options: column.options,
-          styles: baseStyle
+          styles: baseStyle,
         });
       }
     } else {
@@ -119,7 +118,7 @@ const ExportPDF = <T>({
         content: column.label,
         key: column.key,
         options: column.options,
-        styles: baseStyle
+        styles: baseStyle,
       });
     }
   });
@@ -147,15 +146,16 @@ const ExportPDF = <T>({
         .filter(Boolean) // hilangkan string kosong
         .join("  |  "); // separator antar grup (bisa diganti sesuai preferensi)
 
+      // console.log(groupContent)
       const groupRow = [
         {
           content: groupContent,
           colSpan: totalColumns, // colSpan sesuai jumlah kolom tabel
           styles: {
             fontStyle: "bold",
-            halign: "left" // bisa disesuaikan
-          }
-        }
+            halign: "left", // bisa disesuaikan
+          },
+        },
       ];
 
       tableRows.push(groupRow);
@@ -173,6 +173,7 @@ const ExportPDF = <T>({
           // Hitung subtotal & total
           totals[columnKey] = (totals[columnKey] || 0) + Number(value || 0);
           subtotal[columnKey] = (subtotal[columnKey] || 0) + Number(value || 0);
+          const isImage = column.options?.format === "IMAGE";
 
           return {
             content: (() => {
@@ -187,6 +188,8 @@ const ExportPDF = <T>({
                     : "";
                 case "NUMBER":
                   return value !== undefined ? Number(value || 0) : "";
+                case "IMAGE":
+                  return ""
                 case "DATETIME":
                   return value !== undefined
                     ? convertDateTime(value || new Date())
@@ -195,26 +198,27 @@ const ExportPDF = <T>({
                   return value !== undefined ? value.toString() : "";
               }
             })(),
+            foto: isImage ? value : null,
             styles: {
               halign: column?.options?.halign
                 ? column?.options?.halign
                 : column?.options?.format === "RP" ||
                   column?.options?.format === "GR" ||
                   column?.options?.format === "NUMBER"
-                ? "right"
-                : typeof value === "number"
-                ? "right"
-                : "left"
-            }
+                  ? "right"
+                  : typeof value === "number"
+                    ? "right"
+                    : "left",
+            },
           };
         });
+
 
         tableRows.push(rowData);
       });
 
       // Footer Subtotal
       const footersubtotal: any = [];
-
       flatColumns.forEach((column) => {
         const total = subtotal[column.key as keyof DataItemGenerator];
         if (
@@ -226,23 +230,23 @@ const ExportPDF = <T>({
             content: column?.options?.disabledFooter
               ? ""
               : (() => {
-                  switch (column?.options?.format) {
-                    case "RP":
-                      return total.toLocaleString("kr-ko");
-                    case "GR":
-                      return total.toFixed(3);
-                    case "NUMBER":
-                      return total;
-                    default:
-                      return total.toString();
-                  }
-                })(),
+                switch (column?.options?.format) {
+                  case "RP":
+                    return total.toLocaleString("kr-ko");
+                  case "GR":
+                    return total.toFixed(3);
+                  case "NUMBER":
+                    return total;
+                  default:
+                    return total.toString();
+                }
+              })(),
             styles: {
               halign: column?.options?.halign || "right",
               textColor: `#${pdfSetting?.txtColor || "000"}`,
               fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
-              fontStyle: "bold"
-            }
+              fontStyle: "bold",
+            },
           });
         } else {
           footersubtotal.push({
@@ -250,10 +254,12 @@ const ExportPDF = <T>({
             styles: {
               textColor: `#${pdfSetting?.txtColor || "000"}`,
               fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
-              fontStyle: "bold"
-            }
+              fontStyle: "bold",
+            },
           });
         }
+
+
       });
 
       const colSpan = pdfSetting?.grandTotalSetting?.colSpan
@@ -271,16 +277,14 @@ const ExportPDF = <T>({
         : "";
 
       footersubtotal[0] = {
-        content: `${
-          footerSetting?.subTotal?.caption || "SUB TOTAL"
-        }${subtotalCount} ${captionSub}`,
+        content: `${footerSetting?.subTotal?.caption || "SUB TOTAL"}${subtotalCount} ${captionSub}`,
         colSpan,
         styles: {
           textColor: `#${pdfSetting?.txtColor || "000"}`,
           fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
           fontStyle: "bold",
-          halign: "center"
-        }
+          halign: "center",
+        },
       };
 
       if (pdfSetting?.grandTotalSetting?.colSpan) {
@@ -310,6 +314,8 @@ const ExportPDF = <T>({
               return value !== undefined ? Number(value || 0).toFixed(3) : "";
             case "NUMBER":
               return value !== undefined ? Number(value || 0) : "";
+            case "IMAGE":
+              return '';
             case "DATETIME":
               return value !== undefined
                 ? convertDateTime(value || new Date())
@@ -325,15 +331,19 @@ const ExportPDF = <T>({
           : column?.options?.format === "RP" ||
             column?.options?.format === "GR" ||
             column?.options?.format === "NUMBER"
-          ? "right"
-          : typeof value === "number"
-          ? "right"
-          : "left";
+            ? "right"
+            : typeof value === "number"
+              ? "right"
+              : "left";
+
+        const isImage = column.options?.format === "IMAGE";
+
 
         return {
           options: column?.options,
           content,
-          styles: { halign }
+          foto: isImage ? value : null,
+          styles: { halign },
         };
       };
 
@@ -363,18 +373,18 @@ const ExportPDF = <T>({
     const content = column?.options?.disabledFooter
       ? ""
       : (() => {
-          if (!isNumericFormat) return "";
-          switch (column.options?.format) {
-            case "RP":
-              return Number(total || 0).toLocaleString("kr-KO");
-            case "GR":
-              return Number(total || 0).toFixed(3);
-            case "NUMBER":
-              return Number(total || 0);
-            default:
-              return (total || 0).toString();
-          }
-        })();
+        if (!isNumericFormat) return "";
+        switch (column.options?.format) {
+          case "RP":
+            return Number(total || 0).toLocaleString("kr-KO");
+          case "GR":
+            return Number(total || 0).toFixed(3);
+          case "NUMBER":
+            return Number(total || 0);
+          default:
+            return (total || 0).toString();
+        }
+      })();
 
     grandTotal.push({
       options: column?.options,
@@ -383,12 +393,12 @@ const ExportPDF = <T>({
         halign: column?.options?.halign
           ? column.options.halign
           : isNumericFormat
-          ? "right"
-          : "left",
+            ? "right"
+            : "left",
         textColor: `#${pdfSetting?.txtColor || "000"}`,
         fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
-        fontStyle: "bold"
-      }
+        fontStyle: "bold",
+      },
     });
   });
 
@@ -417,8 +427,8 @@ const ExportPDF = <T>({
         textColor: `#${pdfSetting?.txtColor || "000"}`,
         fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
         fontStyle: "bold",
-        halign: "center"
-      }
+        halign: "center",
+      },
     };
 
     // Hapus kolom setelah grandTotal[0] sebanyak colSpan - 1 agar panjang array tetap flatColumns.length
@@ -431,8 +441,8 @@ const ExportPDF = <T>({
         styles: {
           textColor: `#${pdfSetting?.txtColor || "000"}`,
           fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
-          fontStyle: "bold"
-        }
+          fontStyle: "bold",
+        },
       });
     }
 
@@ -454,9 +464,9 @@ const ExportPDF = <T>({
         styles: {
           textColor: `#${pdfSetting?.txtColor || "000"}`,
           fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
-          fontStyle: "italic"
-        }
-      }
+          fontStyle: "italic",
+        },
+      },
     ]);
   }
 
@@ -471,9 +481,42 @@ const ExportPDF = <T>({
     headStyles: {
       fontSize: pdfSetting?.fontSIze || 8,
       textColor: `#${pdfSetting?.txtColor || "000"}`,
-      fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`
+      fillColor: `#${pdfSetting?.bgColor || "E8E5E5"}`,
     },
-    tableLineColor: [255, 255, 255]
+    tableLineColor: [255, 255, 255],
+    didParseCell: function (data) {
+      const colIndex = data.column.index;
+      const col = flatColumns[colIndex];
+      const isImage = col?.options?.format === "IMAGE";
+
+      if (isImage && data.cell.raw && (data.cell.raw as any).foto) {
+        data.row.height = 20; // Ganti sesuai ukuran gambar
+        data.cell.styles.valign = "middle"; // Ubah ke "middle" agar foto di tengah
+        data.cell.styles.halign = "center"; // Tambahkan agar foto di tengah secara horizontal
+      }
+    },
+
+    // ✅ Render gambar sesuai posisi dan ukuran
+    didDrawCell: function (data) {
+      const { cell } = data;
+      const raw = cell.raw || {};
+      const value = (raw as any).foto;
+      const colIndex = data.column.index;
+      const col = flatColumns[colIndex];
+
+      if (col?.options?.format === "IMAGE" && value) {
+        const imageSize = 15;
+        const x = cell.x + (cell.width - imageSize) / 2;
+        const y = cell.y + (cell.height - imageSize) / 2;
+
+        try {
+          doc.addImage(value, "JPG", x, y, imageSize, imageSize);
+        } catch (err) {
+          console.warn("❌ Gagal render gambar:", err);
+        }
+      }
+    }
+
   });
   tableRows = [];
   finalY = (doc as any).lastAutoTable.finalY;
@@ -490,7 +533,7 @@ const ExportPDF = <T>({
     const verticalPos = pageHeight - 10;
     doc.setPage(j);
     doc.text(`${j} of ${pages}`, horizontalPos, verticalPos, {
-      align: "center"
+      align: "center",
     });
   }
   if (typeof pdfSetting?.customize === "function") {
@@ -504,5 +547,6 @@ const ExportPDF = <T>({
     doc.save(`${pdfSetting?.titlePdf || title}.pdf`);
   }
 };
+
 
 export default ExportPDF;

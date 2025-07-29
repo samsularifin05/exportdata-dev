@@ -1,5 +1,6 @@
 // import BwipJs from "bwip-js/browser";
 import {
+  addImagesToRow,
   convertDateTime,
   countColumns,
   formatingTitle,
@@ -7,7 +8,6 @@ import {
 } from "./helpers";
 import { DataItemGenerator, GenaratorExport } from "./interface";
 import ExcelJS from "exceljs";
-
 const ExportExcel = async <T>({
   columns,
   data,
@@ -15,7 +15,7 @@ const ExportExcel = async <T>({
   date,
   excelSetting,
   title,
-  footerSetting
+  footerSetting,
 }: GenaratorExport<T>): Promise<void> => {
   const workbook = new ExcelJS.Workbook();
   columns = columns.filter((item) => !item.options?.disabledColumn);
@@ -37,16 +37,16 @@ const ExportExcel = async <T>({
     cell.font = {
       color: { argb: "000000" },
       bold: true,
-      size: 12
+      size: 12,
     };
   });
 
   // Tanggal
   if (date) {
     const tanggalRow = worksheet.addRow([]);
-    tanggalRow.getCell(1).value = `${
-      date.caption ? date.caption : "Tanggal "
-    } : ${date?.start_date} ${date?.end_date ? `s/d ${date?.end_date}` : ""}`;
+    tanggalRow.getCell(1).value =
+      `${date.caption ? date.caption : "Tanggal "} : ${date?.start_date} ${date?.end_date ? `s/d ${date?.end_date}` : ""
+      }`;
     tanggalRow.getCell(1).alignment = { horizontal: "center" };
     worksheet.mergeCells(
       `A${tanggalRow.number}:${lastColumnLetter}${tanggalRow.number}`
@@ -56,7 +56,7 @@ const ExportExcel = async <T>({
       cell.font = {
         color: { argb: "00000" },
         bold: true,
-        size: 12
+        size: 12,
       };
     });
   }
@@ -101,11 +101,11 @@ const ExportExcel = async <T>({
         cell.fill = {
           type: "pattern",
           pattern: "solid",
-          fgColor: { argb: excelSetting?.bgColor || "E8E5E5" }
+          fgColor: { argb: excelSetting?.bgColor || "E8E5E5" },
         };
         cell.font = {
           color: { argb: excelSetting?.txtColor || "000000" },
-          bold: true
+          bold: true,
         };
         cell.alignment = { horizontal: "center", vertical: "middle" };
       }
@@ -118,11 +118,11 @@ const ExportExcel = async <T>({
           cell.fill = {
             type: "pattern",
             pattern: "solid",
-            fgColor: { argb: excelSetting?.bgColor || "E8E5E5" }
+            fgColor: { argb: excelSetting?.bgColor || "E8E5E5" },
           };
           cell.font = {
             color: { argb: excelSetting?.txtColor || "000000" },
-            bold: true
+            bold: true,
           };
 
           const halign =
@@ -143,15 +143,15 @@ const ExportExcel = async <T>({
       headerColumn1.getCell(colIndex).fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: excelSetting?.bgColor || "E8E5E5" }
+        fgColor: { argb: excelSetting?.bgColor || "E8E5E5" },
       };
       headerColumn1.getCell(colIndex).font = {
         color: { argb: excelSetting?.txtColor || "000000" },
-        bold: true
+        bold: true,
       };
       headerColumn1.getCell(colIndex).alignment = {
         horizontal: col.options?.halign || "center",
-        vertical: col.options?.valign || "middle"
+        vertical: col.options?.valign || "middle",
       };
       if (hasChild && headerColumn2) {
         worksheet.mergeCells(
@@ -166,7 +166,7 @@ const ExportExcel = async <T>({
 
   const totals: { [key: string]: number } = {};
 
-  data.forEach((item) => {
+  data.forEach(async (item) => {
     if (grouping.length > 0) {
       const totalColumns = countColumns(columns); // sudah kamu punya
       const groupContent = grouping
@@ -180,9 +180,7 @@ const ExportExcel = async <T>({
 
       const groupRow = worksheet.addRow([groupContent]); // hanya isi satu sel (di kolom A)
       worksheet.mergeCells(
-        `A${groupRow.number}:${String.fromCharCode(64 + totalColumns)}${
-          groupRow.number
-        }`
+        `A${groupRow.number}:${String.fromCharCode(64 + totalColumns)}${groupRow.number}`
       );
 
       // Styling opsional:
@@ -191,15 +189,26 @@ const ExportExcel = async <T>({
 
       const subtotal: { [key: string]: number } = {};
 
-      item.detail.forEach((itemDetail: any) => {
+      item.detail.forEach(async (itemDetail: any) => {
         const flatColumns = getFlattenColumns(columns);
 
         const rowData = flatColumns.map((column) => {
+          if (
+            column?.options?.format === "IMAGE" &&
+            itemDetail[column.key as keyof DataItemGenerator]
+          ) {
+            return {
+              value: "", // Kosongkan value untuk cell gambar
+              alignment: { horizontal: "center", vertical: "middle" },
+              isImage: true,
+              imageSrc: itemDetail[column.key as keyof DataItemGenerator], // base64 sudah didukung oleh fetchImageAsBuffer
+            };
+          }
           const value =
             column?.options?.format === "DATETIME"
               ? convertDateTime(
-                  itemDetail[column.key as keyof DataItemGenerator]
-                )
+                itemDetail[column.key as keyof DataItemGenerator]
+              )
               : itemDetail[column.key as keyof DataItemGenerator];
           const alignment = {
             horizontal: column?.options?.halign
@@ -207,8 +216,8 @@ const ExportExcel = async <T>({
               : column?.options?.format === "RP" ||
                 column?.options?.format === "GR" ||
                 column?.options?.format === "NUMBER"
-              ? "right"
-              : "left"
+                ? "right"
+                : "left",
           };
           const columnKey = column.key as keyof DataItemGenerator;
           totals[columnKey] = (totals[columnKey] || 0) + Number(value);
@@ -221,16 +230,44 @@ const ExportExcel = async <T>({
               column?.options?.format === "RP"
                 ? "#,##0"
                 : column?.options?.format === "GR"
-                ? "#,##0.000"
-                : undefined
+                  ? "#,##0.000"
+                  : undefined,
           };
         });
 
         const row = worksheet.addRow(rowData.map((cellData) => cellData.value));
 
+        await addImagesToRow(workbook, worksheet, row, rowData);
+
         rowData.forEach((cellData, index) => {
           const cell = row.getCell(index + 1);
-          cell.alignment = cellData.alignment;
+          // Only assign allowed values for horizontal and vertical alignment
+          const allowedHorizontal: Array<"center" | "right" | "left" | "fill" | "justify" | "centerContinuous" | "distributed"> = [
+            "center", "right", "left", "fill", "justify", "centerContinuous", "distributed"
+          ];
+          const allowedVertical: Array<"top" | "middle" | "bottom" | "distributed" | "justify"> = [
+            "top", "middle", "bottom", "distributed", "justify"
+          ];
+
+          let horizontal: typeof allowedHorizontal[number] | undefined = undefined;
+          let vertical: typeof allowedVertical[number] | undefined = undefined;
+
+          if (cellData.alignment && typeof cellData.alignment.horizontal === "string" && allowedHorizontal.includes(cellData.alignment.horizontal as any)) {
+            horizontal = cellData.alignment.horizontal as typeof allowedHorizontal[number];
+          }
+          if (
+            cellData.alignment &&
+            "vertical" in cellData.alignment &&
+            typeof (cellData.alignment as any).vertical === "string" &&
+            allowedVertical.includes((cellData.alignment as any).vertical)
+          ) {
+            vertical = (cellData.alignment as any).vertical as typeof allowedVertical[number];
+          }
+
+          cell.alignment = {
+            ...(horizontal ? { horizontal } : {}),
+            ...(vertical ? { vertical } : {}),
+          };
 
           if (cellData.numFmt) {
             cell.numFmt = cellData.numFmt;
@@ -262,9 +299,8 @@ const ExportExcel = async <T>({
           const captionSub = footerSetting?.subTotal?.captionItem
             ? footerSetting?.subTotal?.captionItem
             : "";
-          (subtotalRow.getCell(1).value = `${
-            footerSetting?.subTotal?.caption || "SUB TOTAL"
-          } ${subtotalCount} ${captionSub}`),
+          (subtotalRow.getCell(1).value =
+            `${footerSetting?.subTotal?.caption || "SUB TOTAL"} ${subtotalCount} ${captionSub}`),
             (subtotalRow.getCell(1).alignment = { horizontal: "center" });
 
           // Explicitly cast the cell to CellValue to set numFmt
@@ -291,16 +327,26 @@ const ExportExcel = async <T>({
           type: "pattern",
           pattern: "solid",
           fgColor: { argb: excelSetting?.bgColor || "#E8E5E5" }, // Warna hijau yang diinginkan
-          bgColor: { argb: excelSetting?.bgColor || "#E8E5E5" }
+          bgColor: { argb: excelSetting?.bgColor || "#E8E5E5" },
         };
         cell.font = {
           color: { argb: excelSetting?.txtColor },
-          bold: true
+          bold: true,
         };
       });
     } else {
       const flatColumns = getFlattenColumns(columns);
       const rowData = flatColumns.map((column) => {
+        if (column?.options?.format === "IMAGE" && item[column.key as keyof DataItemGenerator]) {
+          return {
+            value: "",
+            options: column?.options,
+            alignment: { horizontal: "center", vertical: "middle" },
+            isImage: true,
+            imageSrc: item[column.key as keyof DataItemGenerator],
+          };
+        }
+
         const value =
           column?.options?.format === "DATETIME"
             ? convertDateTime(item[column.key as keyof DataItemGenerator])
@@ -312,8 +358,8 @@ const ExportExcel = async <T>({
             : column?.options?.format === "RP" ||
               column?.options?.format === "GR" ||
               column?.options?.format === "NUMBER"
-            ? "right"
-            : "left"
+              ? "right"
+              : "left",
         };
 
         const columnKey = column.key as keyof DataItemGenerator;
@@ -327,15 +373,15 @@ const ExportExcel = async <T>({
             column?.options?.format === "RP"
               ? "#,##0"
               : column?.options?.format === "GR"
-              ? "#,##0.000"
-              : // : column?.options?.barcodeOption !== undefined
+                ? "#,##0.000"
+                : // : column?.options?.barcodeOption !== undefined
                 //   ? "BARCODE"
-                undefined
+                undefined,
         };
       });
 
-      const row = worksheet.addRow(rowData.map((cellData) => cellData.value));
-
+      const row = worksheet.addRow(rowData.map(async (cellData) => cellData.value));
+      await addImagesToRow(workbook, worksheet, row, rowData);
       rowData.forEach((cellData, index) => {
         const cell = row.getCell(index + 1);
 
@@ -357,8 +403,8 @@ const ExportExcel = async <T>({
         }
 
         cell.alignment = {
-          horizontal: cellData.alignment.horizontal,
-          vertical: verticalAlignment
+          horizontal: cellData.alignment.horizontal ? cellData.alignment.horizontal as "center" | "right" | "left" | "justify" | "distributed" | "fill" | "centerContinuous" : "left",
+          vertical: verticalAlignment,
         };
 
         if (cellData.numFmt) {
@@ -388,7 +434,7 @@ const ExportExcel = async <T>({
       const GrandTotal = footerSetting?.grandTotal?.enableCount
         ? grouping.length > 0
           ? " : " +
-            data.map((list) => list.detail.length).reduce((a, b) => a + b, 0)
+          data.map((list) => list.detail.length).reduce((a, b) => a + b, 0)
           : " : " + data.length
         : "";
 
@@ -396,9 +442,7 @@ const ExportExcel = async <T>({
         ? footerSetting?.grandTotal?.captionItem
         : "";
 
-      const footerGrandtotal = `${
-        footerSetting?.grandTotal?.caption || "GRAND TOTAL"
-      } ${GrandTotal} ${caption}`;
+      const footerGrandtotal = `${footerSetting?.grandTotal?.caption || "GRAND TOTAL"} ${GrandTotal} ${caption}`;
       grandTotalRow.getCell(1).value = footerGrandtotal;
       grandTotalRow.getCell(1).alignment = { horizontal: "center" };
 
@@ -425,11 +469,11 @@ const ExportExcel = async <T>({
       type: "pattern",
       pattern: "solid",
       fgColor: { argb: excelSetting?.bgColor || "#E8E5E5" }, // Warna hijau yang diinginkan
-      bgColor: { argb: excelSetting?.bgColor || "#E8E5E5" }
+      bgColor: { argb: excelSetting?.bgColor || "#E8E5E5" },
     };
     cell.font = {
       color: { argb: excelSetting?.txtColor },
-      bold: true
+      bold: true,
     };
   });
 
@@ -439,7 +483,7 @@ const ExportExcel = async <T>({
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
