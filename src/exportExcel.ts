@@ -237,8 +237,6 @@ const ExportExcel = async <T>({
 
         const row = worksheet.addRow(rowData.map((cellData) => cellData.value));
 
-        await addImagesToRow(workbook, worksheet, row, rowData);
-
         rowData.forEach((cellData, index) => {
           const cell = row.getCell(index + 1);
           // Only assign allowed values for horizontal and vertical alignment
@@ -269,10 +267,20 @@ const ExportExcel = async <T>({
             ...(vertical ? { vertical } : {}),
           };
 
-          if (cellData.numFmt) {
+          // Set numFmt only for number cells
+          if (
+            cellData.numFmt &&
+            typeof cellData.value === "number" &&
+            !isNaN(cellData.value)
+          ) {
+            // Ensure the cell value is a number before setting numFmt
+            cell.value = Number(cellData.value);
             cell.numFmt = cellData.numFmt;
           }
         });
+
+        // Add images after all cell formatting is complete
+        await addImagesToRow(workbook, worksheet, row, rowData);
       });
       const flatColumnsSubTott = getFlattenColumns(columns);
 
@@ -336,23 +344,26 @@ const ExportExcel = async <T>({
       });
     } else {
       const flatColumns = getFlattenColumns(columns);
+
       const rowData = flatColumns.map((column) => {
-        if (column?.options?.format === "IMAGE" && item[column.key as keyof DataItemGenerator]) {
+        if (
+          column?.options?.format === "IMAGE" &&
+          item[column.key as keyof DataItemGenerator]
+        ) {
           return {
-            value: "",
-            options: column?.options,
+            value: "", // Kosongkan value untuk cell gambar
             alignment: { horizontal: "center", vertical: "middle" },
             isImage: true,
-            imageSrc: item[column.key as keyof DataItemGenerator],
+            imageSrc: item[column.key as keyof DataItemGenerator], // base64 sudah didukung oleh fetchImageAsBuffer
           };
         }
-
         const value =
           column?.options?.format === "DATETIME"
-            ? convertDateTime(item[column.key as keyof DataItemGenerator])
+            ? convertDateTime(
+              item[column.key as keyof DataItemGenerator]
+            )
             : item[column.key as keyof DataItemGenerator];
         const alignment = {
-          vertical: "middle",
           horizontal: column?.options?.halign
             ? column?.options?.halign
             : column?.options?.format === "RP" ||
@@ -361,56 +372,69 @@ const ExportExcel = async <T>({
               ? "right"
               : "left",
         };
-
         const columnKey = column.key as keyof DataItemGenerator;
         totals[columnKey] = (totals[columnKey] || 0) + Number(value);
 
         return {
           value,
-          options: column?.options,
           alignment,
           numFmt:
             column?.options?.format === "RP"
               ? "#,##0"
               : column?.options?.format === "GR"
                 ? "#,##0.000"
-                : // : column?.options?.barcodeOption !== undefined
-                //   ? "BARCODE"
-                undefined,
+                : undefined,
         };
       });
 
-      const row = worksheet.addRow(rowData.map(async (cellData) => cellData.value));
-      await addImagesToRow(workbook, worksheet, row, rowData);
+      // BUG: rowData.map(async (cellData) => cellData.value) menghasilkan array Promise, bukan array value!
+      // Seharusnya: rowData.map(cellData => cellData.value)
+      const row = worksheet.addRow(rowData.map(cellData => cellData.value));
+
       rowData.forEach((cellData, index) => {
         const cell = row.getCell(index + 1);
+        // Only assign allowed values for horizontal and vertical alignment
+        const allowedHorizontal: Array<"center" | "right" | "left" | "fill" | "justify" | "centerContinuous" | "distributed"> = [
+          "center", "right", "left", "fill", "justify", "centerContinuous", "distributed"
+        ];
+        const allowedVertical: Array<"top" | "middle" | "bottom" | "distributed" | "justify"> = [
+          "top", "middle", "bottom", "distributed", "justify"
+        ];
 
-        const vertical = cellData.alignment.vertical
-          ? String(cellData.alignment.vertical || "bottom")
-          : "bottom";
+        let horizontal: typeof allowedHorizontal[number] | undefined = undefined;
+        let vertical: typeof allowedVertical[number] | undefined = undefined;
 
-        let verticalAlignment: any = ""; // Default value
-
-        // Check if the value is valid and assign it
+        if (cellData.alignment && typeof cellData.alignment.horizontal === "string" && allowedHorizontal.includes(cellData.alignment.horizontal as any)) {
+          horizontal = cellData.alignment.horizontal as typeof allowedHorizontal[number];
+        }
         if (
-          vertical === "middle" ||
-          vertical === "bottom" ||
-          vertical === "justify" ||
-          vertical === "distributed" ||
-          vertical === "top"
+          cellData.alignment &&
+          "vertical" in cellData.alignment &&
+          typeof (cellData.alignment as any).vertical === "string" &&
+          allowedVertical.includes((cellData.alignment as any).vertical)
         ) {
-          verticalAlignment = vertical as any;
+          vertical = (cellData.alignment as any).vertical as typeof allowedVertical[number];
         }
 
         cell.alignment = {
-          horizontal: cellData.alignment.horizontal ? cellData.alignment.horizontal as "center" | "right" | "left" | "justify" | "distributed" | "fill" | "centerContinuous" : "left",
-          vertical: verticalAlignment,
+          ...(horizontal ? { horizontal } : {}),
+          ...(vertical ? { vertical } : {}),
         };
 
-        if (cellData.numFmt) {
+        if (
+          cellData.numFmt &&
+          typeof cellData.value === "number" &&
+          !isNaN(cellData.value)
+        ) {
+          // Ensure the cell value is a number before setting numFmt
+          cell.value = Number(cellData.value);
           cell.numFmt = cellData.numFmt;
         }
       });
+
+      // Add images after all cell formatting is complete
+      await addImagesToRow(workbook, worksheet, row, rowData);
+
     }
   });
 
