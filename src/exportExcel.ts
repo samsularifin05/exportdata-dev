@@ -69,9 +69,24 @@ const ExportExcel = async <T>({
     `A${additionalText.number}:${lastColumnLetter}${additionalText.number}`
   );
 
+
+
   additionalText.eachCell((cell) => {
     cell.font = { color: { argb: "000000" }, bold: true, size: 12 };
   });
+
+  if (excelSetting?.customHeader) {
+    excelSetting.customHeader(worksheet, lastUsedColumnIndex);
+  }
+
+  const startY = excelSetting?.startY && excelSetting.startY > 0 ? excelSetting.startY : 1;
+
+  // Tambahkan baris kosong sebelum header table
+  if (startY > 1) {
+    for (let i = 1; i < startY; i++) {
+      worksheet.addRow([]);
+    }
+  }
 
   const hasChild = columns.some((col) => col.child && col.child.length > 0);
   const headerColumn1 = worksheet.addRow([]);
@@ -81,7 +96,8 @@ const ExportExcel = async <T>({
     if (col.child && col.child.length > 0) {
       // Parent dengan child: di headerColumn1 ditulis parent-nya dan di headerColumn2 tulis child-nya
       // Merge parent cell di headerColumn1 sesuai jumlah child
-      const startCol = headerColumn1.actualCellCount + 1;
+      const startCol = headerColumn1.actualCellCount + 1
+
       const childCount = col.child.length;
 
       // Isi parent di headerColumn1, merge sesuai childCount
@@ -167,7 +183,7 @@ const ExportExcel = async <T>({
   const totals: { [key: string]: number } = {};
 
   data.forEach(async (item) => {
-    if (item.detail.length > 0) {
+    if (item.detail?.length > 0) {
 
       if (grouping.length > 0) {
 
@@ -517,8 +533,8 @@ const ExportExcel = async <T>({
   }
 
 
-  if (excelSetting?.customize) {
-    excelSetting.customize(worksheet);
+  if (excelSetting?.customFooter) {
+    excelSetting.customFooter(worksheet, lastUsedColumnIndex);
   }
 
   const buffer = await workbook.xlsx.writeBuffer();

@@ -31,7 +31,7 @@ type CustomizePdfFunction = (
   autoTable?: any
 ) => void;
 type addRowPdfPdfFunction = (tableRows?: any) => void;
-type CustomizeFunctionExcel = (worksheet: ExcelJS.Worksheet) => void;
+type CustomizeFunctionExcel = (worksheet: ExcelJS.Worksheet, lastIndex: number) => void;
 
 export interface GenaratorExport<T> {
   columns: ColumnGenarator<T>[];
@@ -48,7 +48,7 @@ export interface GenaratorExport<T> {
     bgColor?: string;
     titlePdf?: string;
     txtColor?: string;
-    finalY?: number;
+    startY?: number;
     textHeaderRight?: string;
     textHeaderLeft?: string;
     theme?: "grid" | "striped" | "plain";
@@ -58,7 +58,8 @@ export interface GenaratorExport<T> {
     };
     openNewTab?: boolean;
     addRow?: addRowPdfPdfFunction;
-    customize?: CustomizePdfFunction;
+    customHeader?: CustomizePdfFunction;
+    customFooter?: CustomizePdfFunction;
     disablePrintDate?: boolean;
   };
   date?: {
@@ -76,12 +77,14 @@ export interface GenaratorExport<T> {
     titleExcel?: string;
     bgColor?: string;
     txtColor?: string;
+    startY?: number;
     additionalTextHeader?: string;
     grandTotalSetting?: {
       disableGrandTotal?: boolean;
       colSpan?: number;
     };
-    customize?: CustomizeFunctionExcel;
+    customHeader?: CustomizeFunctionExcel;
+    customFooter?: CustomizeFunctionExcel;
   };
   grouping: string[];
   footerSetting?: {

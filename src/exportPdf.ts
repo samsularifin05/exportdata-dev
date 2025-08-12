@@ -50,13 +50,17 @@ const ExportPDF = <T>({
       { align: "right" }
     );
   }
+
+  if (typeof pdfSetting?.customHeader === "function") {
+    pdfSetting.customHeader(doc, finalY, autoTable);
+  }
   doc.setProperties({
     title: title || pdfSetting?.titlePdf,
   });
 
-  if (pdfSetting?.finalY) {
-    console.log(pdfSetting.finalY);
-    finalY = pdfSetting.finalY;
+  if (pdfSetting?.startY) {
+    // console.log(pdfSetting.finalY);
+    finalY = pdfSetting.startY;
   }
 
   // Header Tabel
@@ -134,7 +138,7 @@ const ExportPDF = <T>({
   const totals: { [key: string]: number } = {};
 
   data.forEach((item) => {
-    if (item.detail.length > 0) {
+    if (item.detail?.length > 0) {
       // Tambah row grup (header kelompok)
 
       if (grouping.length > 0) {
@@ -542,8 +546,8 @@ const ExportPDF = <T>({
       align: "center",
     });
   }
-  if (typeof pdfSetting?.customize === "function") {
-    pdfSetting.customize(doc, finalY, autoTable);
+  if (typeof pdfSetting?.customFooter === "function") {
+    pdfSetting.customFooter(doc, finalY, autoTable);
   }
 
   if (pdfSetting?.openNewTab) {
