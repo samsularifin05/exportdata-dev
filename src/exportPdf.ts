@@ -149,10 +149,8 @@ const ExportPDF = <T>({
               ? `${formatingTitle(column)} : ${item[column]}`
               : ""
           )
-          .filter(Boolean) // hilangkan string kosong
-          .join("  |  "); // separator antar grup (bisa diganti sesuai preferensi)
-
-        // console.log(groupContent)
+          .filter(Boolean)
+          .join("  |  ");
         const groupRow = [
           {
             content: groupContent,
