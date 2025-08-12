@@ -12,6 +12,7 @@ import {
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+
 const ExportPDF = <T>({
   columns,
   data,
@@ -133,32 +134,34 @@ const ExportPDF = <T>({
   const totals: { [key: string]: number } = {};
 
   data.forEach((item) => {
-    if (grouping.length > 0) {
+    if (item.detail.length > 0) {
       // Tambah row grup (header kelompok)
-      const totalColumns = countColumns(columns);
 
-      const groupContent = grouping
-        .map((column) =>
-          item[column] !== undefined
-            ? `${formatingTitle(column)} : ${item[column]}`
-            : ""
-        )
-        .filter(Boolean) // hilangkan string kosong
-        .join("  |  "); // separator antar grup (bisa diganti sesuai preferensi)
+      if (grouping.length > 0) {
+        const totalColumns = countColumns(columns);
+        const groupContent = grouping
+          .map((column) =>
+            item[column] !== undefined || item[column] !== null
+              ? `${formatingTitle(column)} : ${item[column]}`
+              : ""
+          )
+          .filter(Boolean) // hilangkan string kosong
+          .join("  |  "); // separator antar grup (bisa diganti sesuai preferensi)
 
-      // console.log(groupContent)
-      const groupRow = [
-        {
-          content: groupContent,
-          colSpan: totalColumns, // colSpan sesuai jumlah kolom tabel
-          styles: {
-            fontStyle: "bold",
-            halign: "left", // bisa disesuaikan
+        // console.log(groupContent)
+        const groupRow = [
+          {
+            content: groupContent,
+            colSpan: totalColumns, // colSpan sesuai jumlah kolom tabel
+            styles: {
+              fontStyle: "bold",
+              halign: "left", // bisa disesuaikan
+            },
           },
-        },
-      ];
+        ];
 
-      tableRows.push(groupRow);
+        tableRows.push(groupRow);
+      }
 
       const subtotal: { [key: string]: number } = {};
 
@@ -550,5 +553,6 @@ const ExportPDF = <T>({
     doc.save(`${pdfSetting?.titlePdf || title}.pdf`);
   }
 };
+
 
 export default ExportPDF;

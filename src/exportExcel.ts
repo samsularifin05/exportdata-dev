@@ -167,25 +167,29 @@ const ExportExcel = async <T>({
   const totals: { [key: string]: number } = {};
 
   data.forEach(async (item) => {
-    if (grouping.length > 0) {
-      const totalColumns = countColumns(columns); // sudah kamu punya
-      const groupContent = grouping
-        .map((column) =>
-          item[column] !== undefined
-            ? `${formatingTitle(column)} : ${item[column]}`
-            : ""
-        )
-        .filter(Boolean)
-        .join("  |  ");
+    if (item.detail.length > 0) {
 
-      const groupRow = worksheet.addRow([groupContent]); // hanya isi satu sel (di kolom A)
-      worksheet.mergeCells(
-        `A${groupRow.number}:${String.fromCharCode(64 + totalColumns)}${groupRow.number}`
-      );
+      if (grouping.length > 0) {
 
-      // Styling opsional:
-      groupRow.getCell(1).alignment = { horizontal: "left" };
-      groupRow.getCell(1).font = { bold: true };
+        const totalColumns = countColumns(columns); // sudah kamu punya
+        const groupContent = grouping
+          .map((column) =>
+            item[column] !== undefined || item[column] !== null
+              ? `${formatingTitle(column)} : ${item[column]}`
+              : ""
+          )
+          .filter(Boolean)
+          .join("  |  ");
+
+        const groupRow = worksheet.addRow([groupContent]); // hanya isi satu sel (di kolom A)
+        worksheet.mergeCells(
+          `A${groupRow.number}:${String.fromCharCode(64 + totalColumns)}${groupRow.number}`
+        );
+        // Styling opsional:
+        groupRow.getCell(1).alignment = { horizontal: "left" };
+        groupRow.getCell(1).font = { bold: true };
+      }
+
 
       const subtotal: { [key: string]: number } = {};
 
