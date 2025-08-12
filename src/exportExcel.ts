@@ -1,4 +1,3 @@
-// import BwipJs from "bwip-js/browser";
 import {
   addImagesToRow,
   convertDateTime,
@@ -23,8 +22,7 @@ const ExportExcel = async <T>({
 
   const lastUsedColumnIndex = countColumns(columns);
 
-  // Judul
-  // console.log(lastUsedColumnIndex);
+
   const judul = worksheet.addRow([]);
   judul.getCell(1).value = title || excelSetting?.titleExcel;
   judul.getCell(1).alignment = { horizontal: "center" };
@@ -81,7 +79,6 @@ const ExportExcel = async <T>({
 
   const startY = excelSetting?.startY && excelSetting.startY > 0 ? excelSetting.startY : 1;
 
-  // Tambahkan baris kosong sebelum header table
   if (startY > 1) {
     for (let i = 1; i < startY; i++) {
       worksheet.addRow([]);

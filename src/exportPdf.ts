@@ -154,10 +154,10 @@ const ExportPDF = <T>({
         const groupRow = [
           {
             content: groupContent,
-            colSpan: totalColumns, // colSpan sesuai jumlah kolom tabel
+            colSpan: totalColumns,
             styles: {
               fontStyle: "bold",
-              halign: "left", // bisa disesuaikan
+              halign: "left",
             },
           },
         ];
